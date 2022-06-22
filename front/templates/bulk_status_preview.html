@@ -1,0 +1,44 @@
+{% extends "body.html" %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col mt-2">
+                <h3>Изменение статусов</h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="row mt-3">
+                    <div class="col">
+                        <form action="{% url "contract_bulk_status_apply" %}" method="POST">
+                            <div class="input-group mb-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="contract_ids" value="{{ contract_ids }}">
+                                <label class="input-group-text">Новый статус</label>
+                                <select class="form-select" name="new_status">
+                                    {% for ID, title in status_available %}
+                                        <option value="{{ ID }}">{{ title }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-danger" type="submit">Изменить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row mt-4 mb-4">
+                    <div class="col">
+                        <h4>Вы изменяете следующие:</h4>
+                    </div>
+                </div>
+                {% for contract in contracts %}
+                    <div class="row">
+                        <div class="col">
+                            ID: <strong>{{ contract.id }}</strong>
+                            Текущий статус: {{ contract.get_status_display }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

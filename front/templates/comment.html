@@ -1,0 +1,52 @@
+{% block comment %}
+    {% for c in contract.comments.all %}
+        {% if c.text or c.changes %}
+        <div class="row mb-3">
+            <div class="col">
+                <div class="row">
+                    <div class="col">Автор: <strong>{{ c.user.first_name }} {{ c.user.last_name }} {{ c.create_date }}</strong></div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col">
+                        <div class="accordion">
+                            {% if c.text %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapse-commentText-{{ c.id }}" aria-expanded="true">
+                                            Комментарий
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-commentText-{{ c.id }}" class="accordion-collapse collapse show">
+                                        <div class="accordion-body">
+                                            {{ c.text }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if c.changes %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#collapse-commentChange-{{ c.id }}"
+                                                aria-expanded="{% if c.text %}false{% else %}true{% endif %}">
+                                            Изменения
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-commentChange-{{ c.id }}"
+                                         class="accordion-collapse collapse {% if c.text %}{% else %}show{% endif %}">
+                                        <div class="accordion-body">
+                                            {{ c.changes | safe }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

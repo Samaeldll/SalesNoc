@@ -1,0 +1,45 @@
+{% extends "body.html" %}
+{% load static %}
+{% block content %}
+    <div class="container justify-content-center" style="margin-top: 1%">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    Среднее время обработки
+                </div>
+                <div class="col">
+                    <strong>{{ avg_call }}</strong> сек
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col">
+                    Среднее время по пользователю
+                </div>
+                <div class="col">
+                    <div class="row">
+                        <div class="col">
+                            {% if not avg_call_by_user %}
+                                <h5>Нет данных</h5>
+                            {% endif %}
+                            {% for user, val in avg_call_by_user.items %}
+                                <div class="row">
+                                    <div class="col">
+                                        <strong>Ник</strong> {{ user.username }} = <strong>{{ val }}</strong> сек
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    Количество заявок которые ушли в ожидание
+                </div>
+                <div class="col">
+                    {{ no_assign_sum }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

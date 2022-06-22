@@ -1,0 +1,138 @@
+{% extends "body.html" %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col mt-2">
+                <h3>Просмотр заявки №{{ contract_id }}</h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col ">
+                <div class="row  mb-5 p-2">
+                    <div class="col">
+                        <div class="col mt-2 md-2">
+                            <strong>Фио: </strong>{{ contract.name }}
+                            <strong>Телефон: </strong>{{ contract.phone }}
+                            <strong>Адрес: </strong> г. {{ contract.city }}, ул. {{ contract.address }}
+                            <hr>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm">
+                                <strong>Услуга: </strong> {{ info_form.service_first.value }}<br>
+                                <strong>Условия: </strong>{{ contract.get_conditions_first_display }}<br>
+                                <strong>Оборудование: </strong>{{ contract.get_equipment_first_display }}<br>
+                                <strong>Тип
+                                    подключения: </strong>{{ contract.get_type_first_display }}
+                            </div>
+                            <div class="col-sm">
+                                <strong>Услуга: </strong> {{ info_form.service_two.value }}<br>
+                                <strong>Условия: </strong>{{ contract.get_conditions_two_display }}<br>
+                                <strong>Оборудование: </strong>{{ contract.get_equipment_two_display }}<br>
+                                <strong>Тип подключения: </strong>{{ contract.get_type_two_display }}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm mt-1">
+                                <strong>Состояние:</strong> {{contract.get_state_display }}<br>
+                                <strong>Статус:</strong> {{ contract.get_status_display }}<br>
+                                <strong>Выполняющий: </strong>{% if contract.user %}
+                                {{ contract.user.first_name }} {{ contract.user.last_name }} {% else %}Не назначено{% endif %}
+                            </div>
+                            <div class="col-sm mt-1">
+                                <strong>Офисное обращение:</strong> {% if contract.from_office %}Да{% else %}Нет{% endif %}<br>                         
+                            </div>
+                        </div>
+                        <div class="row">
+                            {% if contract.plain_later or contract.infinity_plain %}
+                            <div class="col">
+                                <strong>Заявка отложена: </strong>
+                                {% if contract.plain_later %} {{ contract.plain_later }} {% else %}срок не определен{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <div class="col mt-1">
+                                <ul class="mt-3">
+                                    {% if not contract.state == 3 %}
+                                    <li>
+                                        <form action="{% url 'contract_bulk_later_preview' %}" method="POST">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="contracts[]" value="{{ contract.id }}">
+                                        {% if not contract.plain_later and not contract.infinity_plain %}
+                                            <button type="submit" class="btn">Отложить заявку</button>
+                                        {% else %}
+                                        <a class="btn" type="submit" href="{% url 'contract_plain_cancel' contract.id %}" role="button">Отменить таймер</a>
+                                        {% endif %}
+                                        </form>
+                                    </li>
+                                    {% if not perms.front.contract_assign %}{% else %}
+                                    <li>
+                                        <a class="btn"
+                                           data-bs-toggle="collapse" href="#collapseUserChoice"
+                                           role="button">Назначить выполняющего</a>
+                                        {% endif %}
+                                        <div class="collapse mt-3 mb-2" id="collapseUserChoice">
+                                            <form class="d-flex flex-direction: row-reverse form-inline" action="{% url 'contract_assign' contract.id %}" method="POST">
+                                                {% csrf_token %}
+                                                <select class="form-select" name="new_user" id="new_user">
+                                                    {% for u in users %}
+                                                    <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="btn-toolbar px-2">
+                                                <button type="submit" class="btn btn-info mr-2">Изменить</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </li>
+                                    {% if contract.user == user %}
+                                    <li><a class="btn" href="{% url 'contract_close' contract.id %}">Закончить обработку заявки</a></li>
+                                    {% endif %}
+                                </ul>
+                           {% endif %}
+                            </div>
+                            </div>
+                        {% if not contract.state == 3 %}
+                        <div class="row mt-4">
+                               <ul class="nav nav-tabs" id="tabs" role="tablist">
+                                <li class="nav-item" role="presentation"><a class="nav-link active" id="comment-tab" data-bs-toggle="tab" data-bs-target="#comment" aria-controls="comment"> Комментарии</a></li>
+                                   {% if contract.user == user %}
+                                   <li class="nav-item" role="presentation"><a class="nav-link" id="update-tab" data-bs-toggle="tab" data-bs-target="#update" aria-controls="update">Изменение данных</a></li>
+                                   {% else %}
+                                   <li class="nav-item" role="presentation"><a class="nav-link" id="update-tab2" data-bs-toggle="tab" data-bs-target="#update" aria-controls="update">Изменение данных</a></li>
+                                   {% endif %}
+                             </ul>
+                         <div class="tab-content" id="tabsContent">
+                             <div class="tab-pane fade show active" id="comment" role="tabpanel" aria-labelledby="home-tab">
+                            <form action="" method="POST">
+                                {% csrf_token %}
+                                    <div class="row mt-2">
+                                        <div class="form-group">
+                                            <textarea name="comment" rows="4" class="form-control form-control-sm" id="id_comment"></textarea>
+                                        </div>
+                                        <div class="text-right mt-2">
+                                            <button type="submit" class="btn btn-outline-success">Сохранить Комментарий
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </form>
+                                <div class="col mt-4">
+                                    {% block comment %}
+                                        {% include "comment.html" %}
+                                    {% endblock %}
+                                </div>
+                             </div>
+                             <div class="tab-pane fade" id="update" role="tabpanel" aria-labelledby="profile-tab">
+                                 {% block detail_contract %}
+                                    {% include "detail_contract.html" %}
+                                 {% endblock %}
+                             </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+{% endblock %}

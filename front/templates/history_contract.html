@@ -1,0 +1,76 @@
+{% extends "body.html" %}
+{% block content %}
+    <div class="container">
+        <div class="row mt-4 mb-5">
+            <div class="col">
+                <form action="{% url 'contract_archive_search' %}" method="GET">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="text" placeholder="Введите адрес, телефон, город или фио." value="{{ text }}">
+                        <button class="btn btn-outline-secondary" type="submit">Искать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-10">
+                {% for contract in contracts %}
+                    <div class="row border mb-3 p-2 ">
+                            <div class="col">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="mt-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text">Заявка №{{ contract.pk }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col text-end mt-1">
+                                        <h6> {{ contract.create_date }}</h6>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="mt-2">
+                                            <strong>ФИО: </strong>{{ contract.name }}.
+                                            <strong>Адрес: </strong>{{ contract.city }}
+                                            ул. {{ contract.address }}.
+                                            <strong>Телефон: </strong>{{ contract.phone }}.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mt-2">
+                                        <strong>Состояние: </strong>{{ contract.get_state_display }}.
+                                        <strong>Статус: </strong>{{ contract.get_status_display }}.
+                                        <strong>Офисное обращение:</strong>
+                                        {% if contract.from_office %}<font size="4" color="#FF0000" >да</font>{% else %}Нет{% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mt-2">
+                                        <strong>Создал: </strong>
+                                        {% if contract.created_by %}{{ contract.created_by.first_name }} {{ contract.created_by.last_name }} {% else %}
+                                            Неизвестно{% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mt-2">
+                                        <strong>Выполняющий: </strong>
+                                        {% if contract.user %}{{ contract.user.first_name }} {{ contract.user.last_name }} {% else %} Не назначен{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-1 p-2">
+                                <div class="col">
+                                    <a class="btn btn-secondary"
+                                       href="{% url 'contract_consider' contract.id %}"
+                                       role="button">Подробнее</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

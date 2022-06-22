@@ -1,0 +1,106 @@
+{% extends "body.html" %}
+{% load static %}
+{% block content %}
+    <style>
+        ul {
+            list-style-type: none;
+        }
+    </style>
+    <div class="container justify-content-center" style="margin-top: 1%">
+        <div class="container">
+            <div class="row">
+                <center><h2>Фиксация Обращения</h2></center>
+            </div>
+            <form action="{% url "contract_new" %}" method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col">
+                        <label for="name" class="form-label">Фамилия Имя
+                            Отчество</label>
+                        <div class="input-group mb-3 ">
+                            {{ form.name }}
+                            {{ form.name.errors }}
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label for="phone" class="form-label">Телефон</label>
+                        <div class="input-group mb-3">
+                            {{ form.phone }}
+                            {{ form.phone.errors }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="address" class="form-label">Город</label>
+                        <div class="input-group mb-3">
+                            {{ form.city }}
+                            {{ form.address.errors }}
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label for="address" class="form-label">Адрес клиента</label>
+                        <div class="input-group mb-3">
+                            {{ form.address }}
+                            {{ form.address.errors }}
+                        </div>
+                        <div id="addressFound" class="invalid-feedback">
+                            Заявка с данными параметрами уже существует
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="form-check form-check-inline">
+                            {{ form.from_office }}
+                            {{ form.from_office.errors  }}
+                        <label class="form-check-label" for="inlineCheckbox1">Офисное Обращение</label>
+                </div> -->
+                <div class="row">
+                    <div class="col-sm">
+                        <label for="name" class="form-label">Услуга интересующая абонента:</label>
+                        {% for checkbox in form.priority_service %}
+                            <div class="checkbox mt-1 ml-2">
+                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+						{{ form.priority_service.errors }}
+                    </div>
+                    <div class="col-sm">
+                        <div>
+                            <label for="name" class="form-label">Тип обращения клиента:</label>
+                            <div class="control">
+                                {{ form.from_office }}
+								{{ form.from_office.errors }}
+                                <label class="radio">Офисное обращение</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col">
+                        <label for="address" class="form-label">Комментарий</label>
+                        <div class="input-group mb-3">
+                            <textarea name="comment" id="comment" class="form-control" rows="5"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary">Передать в обработку</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        const addressFoundWarning = document.querySelector("#addressFound")
+        const address = document.querySelector("#id_address")
+        address.addEventListener("keyup", (e) => {
+            fetch("/check/address/?text=" + address.value).then((res) => {
+                res.json().then((r) => {
+                    const found = r.found
+                    addressFoundWarning.style.display = found ? "block" : "none"
+                })
+            })
+        })
+    </script>
+{% endblock %}

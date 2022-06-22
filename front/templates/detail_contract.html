@@ -1,0 +1,136 @@
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <form action="{% url 'contract_update' contract.id %}" method="POST">
+                <div class="row mb-2 p-2 ">
+                    {% csrf_token %}
+                    <input type="hidden" name="contract_id" value="{{ contract.id }}">
+                    <div class="row">
+                        <div class="col"><label for="name" class="form-label">ФИО</label>
+                            <div class="input-group mb-3">{{ info_form.name }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Город</label>
+                            <div class="input-group mb-3">{{ info_form.city }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Улица/Дом</label>
+                            <div class="input-group mb-3">{{ info_form.address }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Телефон</label>
+                            <div class="input-group mb-3">{{ info_form.phone }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label for="name" class="form-label">Услуга</label>
+                            <div class="input-group mb-3">{{ info_form.service_first }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Условия</label>
+                            <div class="input-group mb-3">{{ info_form.conditions_first }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Оборудование</label>
+                            <div class="input-group mb-3">{{ info_form.equipment_first }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Исход</label>
+                            <div class="input-group mb-3">{{ info_form.exodus_in }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label for="name" class="form-label">Услуга</label>
+                            <div class="input-group mb-3">{{ info_form.service_two }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Условия</label>
+                            <div class="input-group mb-3">{{ info_form.conditions_two }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Оборудование</label>
+                            <div class="input-group mb-3">{{ info_form.equipment_two }}</div>
+                        </div>
+                        <div class="col"><label for="name" class="form-label">Исход</label>
+                            <div class="input-group mb-1">{{ info_form.exodus_tv }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col"><label for="name" class="form-label">Статус</label>
+                            <div class="input-group mb-1">{{ info_form.status }}</div>
+                        </div>
+                        <!--<div class="col"><label for="name" class="form-label">Исход</label>
+                            <div class="input-group mb-1">{{ info_form.issue }}</div>
+                        </div>-->
+                    </div>
+                    <!--<div class="row mt-4">
+                        {% if contract.call_date %}
+                            <div class="col">
+                                Звонок выполнен в: <strong>{{ contract.call_date }}</strong>
+                            </div>
+                        {% endif %}
+                        {% if contract.plain_later or contract.infinity_plain %}
+                            <div class="col">
+                                <strong>Заявка отложена: </strong>
+                                {% if contract.plain_later %} {{ contract.plain_later }} {% else %}срок не определен{% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="row col mt-4 mb-2">
+                        <div>
+                            <a class="btn btn-success {% if contract.call_date %}disabled{% endif %}"
+                               href="{% url 'contract_call' contract.id %}" role="button">Выполнить Звонок</a>
+                            {% if not contract.plain_later and not contract.infinity_plain %}
+                                <a class="btn btn-success" data-bs-toggle="collapse" href="#collapseExample"
+                                   role="button">Отложить
+                                    Заявку</a>
+                            {% else %}
+                                <a class="btn btn-success" href="{% url "contract_plain_cancel" contract.id %}"
+                                   role="button">Отменить таймер</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col">
+                            <div class="collapse mt-2" id="collapseExample">
+                                <div class="card card-body">
+                                    <p>Дата</p>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-text">
+                                            Отложить без даты?
+                                        </div>
+                                        <div class="input-group-text">
+                                            <input class="form-check-input mt-0" type="checkbox" name="infinity_delay" value="1">
+                                        </div>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <input type="datetime-local" class="form-control" name="planning_later">
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        Оставьте поля пустыми, если нет необходимости откладывать заявку
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->
+                    <div class="row mt-4">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item"><a class="nav-link active">Комментарий</a></li>
+                        </ul>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="input-group mb-1">
+                                <textarea name="comments" id="comments" cols="80" rows="5" class="form-control form-control-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row p-2">
+                        <div class="col">
+                            <button type="submit" class="btn btn-outline-success">Подтвердить изменение</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="row mt-3">
+                <div class="col">
+                    {% block comment %}
+                        {% include "comment.html" %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

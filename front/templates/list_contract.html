@@ -1,0 +1,138 @@
+{% extends "body.html" %}
+{% block content %}
+    <div class="container">
+        <div class="row mt-2 mb-5">
+            <div class="col">
+                <form action="{% url 'contract_archive_search' %}" method="GET">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="text" placeholder="Введите адрес, телефон, город или фио." value="{{ text }}">
+                        <button class="btn btn-outline-secondary" type="submit">Искать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% if not contracts %}
+            <div class="row mt-5">
+                <div class="col">
+                    <h5>Список активных заявок - пуст</h5>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-9 p-3">
+                <script>
+                    const bulkChangeStatusURL = "{% url "contract_bulk_status_preview" %}";
+                    const bulkMakeLaterURL = "{% url "contract_bulk_later_preview" %}";
+
+                    function sendForm(btn, name) {
+                        let form = btn.closest("form");
+                        if (name === "status") {
+                            form.action = bulkChangeStatusURL;
+                        } else if (name === "later") {
+                            form.action = bulkMakeLaterURL;
+                        } else {
+                            alert(`ERR: Cant find action by name ${name}`);
+                        }
+                    }
+                </script>
+                <form action="#" method="POST">
+                    {% csrf_token %}
+                    {% for contract in contracts %}
+                        <div class="row border mb-3 p-2">
+                            <div class="col">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <div class="mt-3">
+                                            <div class="input-group">
+                                                <div class="input-group-text" id="btnGroupAddon">
+                                                    <input type="checkbox" class="form-check-input" name="contracts[]"
+                                                           value="{{ contract.id }}">
+                                                </div>
+                                                <span class="input-group-text">Заявка №{{ contract.pk }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col text-end mt-1">
+                                        <h6> {{ contract.create_date }}</h6>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="mt-2">
+                                            <strong>ФИО: </strong>{{ contract.name }}.
+                                            <strong>Адрес: </strong>{{ contract.city }}
+                                            ул. {{ contract.address }}.
+                                            <strong>Телефон: </strong>{{ contract.phone }}.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mt-2">
+                                        <strong>Состояние: </strong>{{ contract.get_state_display }}.
+                                        <strong>Статус: </strong>{{ contract.get_status_display }}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mt-2">
+                                        <strong>Создан: </strong>
+                                        {% if contract.created_by %}{{ contract.created_by }} {% else %}
+                                            Неизвестно{% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mt-2">
+                                        <strong>Выполняющий: </strong>
+                                        {% if contract.user %}{{ contract.user.first_name }} {{ contract.user.last_name }} {% else %} Не назначен{% endif %}
+                                    </div>
+                                </div>
+                            {% if contract.plain_later or contract.infinity_plain %}
+                            <div class="col mt-2 ">
+                                Заявка отложена: <strong>
+                                {% if contract.plain_later %}{{ contract.plain_later }}{% else %}срок не определен{% endif %}</strong>
+                            </div>
+                            {% endif %}
+			            </div>
+                            <div class="row mb-1 p-2">
+                                <div class="col">
+                                    <a class="btn btn-secondary"
+                                       href="{% url 'contract_consider' contract.id %}"
+                                       role="button">Подробнее</a>
+                                </div>
+                                <div class="col d-grid gap-2 d-md-flex justify-content-md-end">
+                                    {% if contract.user is None %}
+                                        <a type="submit" class="btn btn-primary"
+                                           href="{% url "contract_take" contract.id %}">Взять Заявку</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+            <div class="col-3 mt-3 p-3">
+                <div class="row">
+                    <div class="col text-center mt-2 mb-3">
+                        <h4>Операции с заявкой</h4>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="row mt-2">
+                        <div class="col text-center">
+                            <form method="POST" action="{% url 'contract_take_random' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success mt-2" disabled >Взять случайную заявку</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col text-center mt-3">
+                        <label for="name" class="form-label">Заявки в
+                            ожидании: {{ contract_waiting }}</label>
+                        <label for="name" class="form-label">Назначенные
+                            заявки: {{ contract_waiting_assigned }}</label>
+                        <label for="name" class="form-label">Отложенные
+                            заявки: {{ contract_pending }}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}
