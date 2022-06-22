@@ -7,7 +7,7 @@ from django import views
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchVector
+from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank, SearchHeadline
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -263,16 +263,20 @@ def contract_archive(request):
 def contract_archive_search(request):
     text = request.GET.get("text")
 
+    vector = SearchVector('name', 'city', 'phone')
+    query = SearchQuery(text)
+    search_headline = SearchHeadline('name', query)
+
     contracts = Contract.objects \
-        .annotate(search=SearchVector('name', 'city', 'phone')) \
-        .filter(search=text) \
-        .order_by("-id")
+        .annotate(rank=SearchRank(vector, query)) \
+        .annotate(headline=search_headline) \
+        .filter(rank__gte=0.001) \
+        .order_by("-rank")
 
     return render(
         request, "history_contract.html", {
-            "contracts":   contracts,
-            "search_form": history_search_form(),
-            "text":        text,
+            "contracts": contracts,
+            "text": text,
         })
 
 
@@ -763,7 +767,7 @@ def check_address(request):
     found = False
 
     contracts = Contract.objects \
-        .annotate(search=SearchVector('address')) \
+        .annotate (search=SearchVector('address')) \
         .filter(search=text)
 
     if contracts.exists():
