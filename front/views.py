@@ -8,6 +8,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank, SearchHeadline
+from django.views.generic import ListView
+from django.db import models
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -35,6 +37,7 @@ from .models import (
     STATUS_NONE, CommentRow,
     FrontUser, Statistic, STATISTIC_NO_AUTO_ASSIGN
 )
+
 
 
 class LoginView(views.View):
@@ -259,26 +262,44 @@ def contract_archive(request):
         })
 
 
-@login_required(login_url='/login')
-def contract_archive_search(request):
-    text = request.GET.get("text")
+class SearchRankCD(SearchRank):
+    function = 'ts_rank_cd'
 
-    vector = SearchVector('name', 'city', 'phone')
-    query = SearchQuery(text)
-    search_headline = SearchHeadline('name', query)
+    def __init__(self, vector, query, normalization = 0, **extra):
+        super(SearchRank, self).__init__(
+            vector, query, normalization, **extra)
 
-    contracts = Contract.objects \
-        .annotate(rank=SearchRank(vector, query)) \
-        .annotate(headline=search_headline) \
-        .filter(rank__gte=0.001) \
-        .order_by("-rank")
 
-    return render(
-        request, "history_contract.html", {
-            "contracts": contracts,
-            "text": text,
-        })
+class ContractArchiveSearch(ListView):
+    template_name = 'history_contract.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(ContractArchiveSearch, self).get_context_data()
+
+        text = self.request.GET.get("text")
+
+        vector = SearchVector('name', 'city', 'phone')
+        query = SearchQuery(self.join([term + ':+' for term in text.split(' ') if len(term)]),
+                            search_type = 'raw', config = 'russian')
+        search_headline = SearchHeadline('name', query)
+
+        contracts = Contract.objects \
+            .annotate(rank = SearchRank(vector, query)) \
+            .annotate(headline = search_headline) \
+            .filter(rank__gte = 0.001) \
+            .order_by("-rank")
+
+        context['vector'] = vector
+        context['contracts'] = contracts
+        context['text'] = text
+        return context
+
+    def get_queryset(self):
+        text = self.request.GET.get("text")
+
+        query = SearchQuery(self.join([term + ':+' for term in text.split(' ') if len(term)]),
+                            search_type = 'raw', config = 'russian')
+        return self.get_queryset().filter(tsv = query).annotate(rank = SearchRankCD(models.F('tsv'), query))
 
 def collect_contract_statistic():
     res = collections.defaultdict(int)

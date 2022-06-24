@@ -278,3 +278,5 @@ class Contract(models.Model):
             comment.text = text
         comment.save()
         self.comments.add(comment)
+
+

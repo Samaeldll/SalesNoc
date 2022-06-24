@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row mt-4 mb-5">
             <div class="col">
-                <form action="{% url 'contract_archive_search' %}" method="GET">
+                <form action="{% url 'ContractArchiveSearch' %}" method="GET">
                     <div class="input-group">
                         <input type="text" class="form-control" name="text" placeholder="Введите адрес, телефон, город или фио." value="{{ text }}">
                         <button class="btn btn-outline-secondary" type="submit">Искать</button>

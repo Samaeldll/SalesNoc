@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     'widget_tweaks',
     'front',
+    'django.contrib.postgres',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" #новое
