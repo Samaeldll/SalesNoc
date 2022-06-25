@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User, AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.contrib.postgres.search import SearchVectorField
 
 STATE_NOTPROCESSED = 0
 STATE_LATER = 1
@@ -189,6 +190,7 @@ class Contract(models.Model):
     user = models.ForeignKey(FrontUser, on_delete=models.SET_NULL, null=True)
     request_number = models.CharField(max_length=20, null=True, blank=True)
     contract_condition = models.TextField(null=True, blank=True)
+    tsv = SearchVectorField(null=True)
     state = models.SmallIntegerField(
         "Состояние",
         choices=STATE_CHOICE,

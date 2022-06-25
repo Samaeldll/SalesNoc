@@ -7,7 +7,7 @@ from django import views
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank, SearchHeadline
+from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank, SearchHeadline, SearchVectorField
 from django.views.generic import ListView
 from django.db import models
 from django.db.models import Q
@@ -269,17 +269,16 @@ class SearchRankCD(SearchRank):
         super(SearchRank, self).__init__(
             vector, query, normalization, **extra)
 
-
 class ContractArchiveSearch(ListView):
     template_name = 'history_contract.html'
+    queryset = Contract.objects.all()
 
     def get_context_data(self, **kwargs):
         context = super(ContractArchiveSearch, self).get_context_data()
-
         text = self.request.GET.get("text")
 
         vector = SearchVector('name', 'city', 'phone')
-        query = SearchQuery(self.join([term + ':+' for term in text.split(' ') if len(term)]),
+        query = SearchQuery('&'.join([term + ':+' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
         search_headline = SearchHeadline('name', query)
 
@@ -297,9 +296,11 @@ class ContractArchiveSearch(ListView):
     def get_queryset(self):
         text = self.request.GET.get("text")
 
-        query = SearchQuery(self.join([term + ':+' for term in text.split(' ') if len(term)]),
+        query = SearchQuery('&'.join([term + ':+' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
-        return self.get_queryset().filter(tsv = query).annotate(rank = SearchRankCD(models.F('tsv'), query))
+        return super().get_queryset().filter(tsv = query).annotate(rank = SearchRankCD(models.F('tsv'), query))
+
+
 
 def collect_contract_statistic():
     res = collections.defaultdict(int)
