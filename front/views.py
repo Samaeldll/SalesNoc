@@ -88,11 +88,15 @@ def dict2html(data, model):
 def dictDiff2html(data):
     res = []
     for key, diff in data.items():
-        res.append(
-            f"<div class='db_field db_field_{key}'>"
-            f"   <strong>{diff['localized_key']}:</strong> "
-            f"   {diff['old']} <strong>изменено на</strong> {diff['new']}"
-            f"</div>")
+        if diff['new'] is None or not diff['new']:
+             pass
+        else:
+            res.append(
+                f"<div class='db_field db_field_{key}'>"
+                f"   <strong>{diff['localized_key']}:</strong> "
+                f"   {diff['old']} <strong>изменено на</strong> {diff['new']}"
+                f"</div>"
+            )
     return "".join(res)
 
 def filter_away_users(online, offline):
@@ -393,9 +397,6 @@ def contract_list_delayed(request):
 def diff_with_form(form, contract): #ignore_field: list = None
     res = {}
     for changed_key in form.changed_data:
-        # if ignore_field is not None:
-        #     if changed_key in ignore_field:
-        #         continue
         field_key = changed_key
 
         localized = contract._meta.get_field(field_key).verbose_name
@@ -405,7 +406,7 @@ def diff_with_form(form, contract): #ignore_field: list = None
 
         if hasattr(contract, f"get_{field_key}_display"):
             old = getattr(contract, f"get_{field_key}_display")()
-            new = dict(form.fields[field_key].choices)[form.cleaned_data[field_key]]
+            new = dict(form.fields.get(field_key).choices).get(form.cleaned_data.get(field_key))
 
         res.update(
             {
@@ -448,12 +449,12 @@ def contract_update(request, contract_id):
             diff = diff_with_form(
                 form,
                 Contract.objects.get(pk=contract_id))
-            contract.save()
+            #contract.save()
             cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
             cmnt.save()
 
             contract.comments.add(cmnt)
-
+        print(form.errors)
         return redirect(contract_consider, contract_id)
 
     return render(request, "consider_contract.html", {

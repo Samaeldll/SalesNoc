@@ -185,10 +185,10 @@ class Contract(models.Model):
             ("contract_take", "Может брать заявку"),
         ]
 
-    name = models.CharField("Фио", max_length=50)
-    city = models.CharField("Город", max_length=50)
-    address = models.CharField("Адрес", max_length=100)
-    phone = models.CharField("Телефон", max_length=20)
+    name = models.CharField("Фио", max_length=50, blank=True)
+    city = models.CharField("Город", max_length=50, blank=True)
+    address = models.CharField("Адрес", max_length=100, blank=True)
+    phone = models.CharField("Телефон", max_length=20, blank=True)
 
     created_by = models.ForeignKey(
         FrontUser, verbose_name="Создатель", on_delete=models.SET_NULL, null=True,

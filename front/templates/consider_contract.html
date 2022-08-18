@@ -3,10 +3,8 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/stylesheet.css' %}">
     <div class="container">
-        <div class="row">
-            <div class="col mt-2">
+        <div class="col mt-1">
                 <h3>Просмотр заявки №{{ contract_id }}</h3>
-            </div>
         </div>
         <div class="row">
             <div class="col">
@@ -17,8 +15,9 @@
                             <strong>Телефон: </strong>{{ contract.phone }}
                             <strong>Адрес: </strong> г. {{ contract.city }}, ул. {{ contract.address }}
                             {% if not contract.state == 3 %}
+                            {% if contract.user == user %}
                             <button class="btnMe" data-bs-toggle="modal" data-bs-target="#EditData"> Изменить Данные</button>
-                            {% endif %}
+                            {% endif %}{% endif %}
                             <hr>
                         </div>
                         <div class="row mb-2">
@@ -29,18 +28,20 @@
                                 <strong>Тип подключения: </strong>{{ contract.get_type_first_display }}<br>
                                 <strong>Исход: </strong>{{ contract.get_exodus_tv_display }}<br>
                                 {% if not contract.state == 3 %}
+                                {% if contract.user == user %}
                                 <button class="btnMe" data-bs-toggle="modal" data-bs-target="#EditInternet"> Изменить Условия</button>
-                                {% endif %}
+                                {% endif %}{% endif %}
                                 </div>
-                            <div class="col-sm">
+                            <div class="col-sm p-1">
                                 <strong><em><mark>{{ contract.service_two }}</mark></em></strong> <br>
                                 <strong>Условия: </strong>{{ contract.get_conditions_two_display }}<br>
                                 <strong>Оборудование: </strong>{{ contract.get_equipment_two_display }}<br>
                                 <strong>Тип подключения: </strong>{{ contract.get_type_two_display }}<br>
                                 <strong>Исход: </strong>{{ contract.get_exodus_in_display }}<br>
                                 {% if not contract.state == 3 %}
+                                {% if contract.user == user %}
                                 <button class="btnMe" data-bs-toggle="modal" data-bs-target="#EditTV"> Изменить Условия</button>
-                                {% endif %}
+                                {% endif %}{% endif %}
                             </div>
                             <div class="modal fade" id="EditData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="EditDataLabel" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -50,47 +51,54 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                                         </div>
                                         <div class="modal-body">
+                                        <form action="{% url 'contract_update' contract.id %}" method="POST">
                                         <div class="col">
+                                            {% csrf_token %}
                                             <center><b> Фамилия Имя Отчество </b></center>
                                             <div class="input-group mb-3 mt-1">{{ info_form.name }}</div>
                                             <center><b> Телефон </b></center>
                                             <div class="input-group mb-3 mt-1">{{ info_form.phone }}</div>
                                             <center><b> Город </b></center>
-                                            <div class="input-group mb-3 mt-1">{{ info_form.city }}</div></div>
+                                            <div class="input-group mb-3 mt-1">{{ info_form.city }}</div>
                                             <center><b> Улица </b></center>
                                             <div class="input-group mb-3 mt-1">{{ info_form.address }}</div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                                            <button type="button" class="btn btn-primary"> Сохранить</button>
+                                             <button type="submit" class="btn btn-primary">Подтвердить изменение</button>
                                         </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
+                                </div>
                             <div class="modal fade" id="EditInternet" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="EditInternetLabel" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            {% if not contract.state == 3 %}
                                             <h5 class="modal-title" id="EditInternetLabel">Изменение условий {{ contract.service_first }}</h5>
-                                            {% endif %}
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                                         </div>
                                         <div class="modal-body">
+                                            <form action="{% url 'contract_update' contract.id %}" method="POST">
                                         <div class="col">
+                                            {% csrf_token %}
                                             <center><b> Условия Подключения </b></center>
                                             <div class="input-group mb-3 mt-1">{{ info_form.conditions_first }}</div>
                                             <center><b> Оборудование </b></center>
                                             <div class="input-group mb-3 mt-1">{{ info_form.equipment_first }}</div>
                                             <center><b> Исход </b></center>
-                                            <div class="input-group mb-3 mt-1">{{ info_form.exodus_in }}</div></div>
+                                            <div class="input-group mb-3 mt-1">{{ info_form.exodus_in }}</div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                                            <button type="button" class="btn btn-primary"> Сохранить</button>
+                                            <button type="submit" class="btn btn-primary">Подтвердить изменение</button>
                                         </div>
+                                            </form>
                                     </div>
                                 </div>
+                            </div>
+                            </div>
                             </div>
                             <div class="modal fade" id="EditTV" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="EditTVLabel" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -100,18 +108,21 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                                         </div>
                                         <div class="modal-body">
+                                            <form action="{% url 'contract_update' contract.id %}" method="POST">
                                         <div class="col">
+                                            {% csrf_token %}
                                             <center><b> Условия Подключения </b></center>
                                             <div class="input-group mt-1">{{ info_form.conditions_two }}</div>
                                             <center><b> Оборудование </b></center>
                                             <div class="input-group mt-1">{{ info_form.equipment_two }}</div>
                                             <center><b> Исход </b></center>
-                                            <div class="input-group mt-1">{{ info_form.exodus_tv }}</div></div>
+                                            <div class="input-group mt-1">{{ info_form.exodus_tv }}</div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                                            <button type="button" class="btn btn-primary"> Сохранить</button>
+                                             <button type="submit" class="btn btn-primary">Подтвердить изменение</button>
                                         </div>
+                                            </form>
                                     </div>
                                 </div>
                             </div>
@@ -123,7 +134,7 @@
                                 <strong>Состояние Заявки:</strong> {{contract.get_state_display }}<br>
                                 <strong>Статус:</strong> {{ contract.get_status_display }}<br>
                             </div>
-                            <div class="col-sm ">
+                            <div class="col">
                                 <strong>Выполняющий: </strong>{% if contract.user %}
                                 {{ contract.user.first_name }} {{ contract.user.last_name }} {% else %}Не назначено{% endif %}<br>
                                 <strong>Офисное обращение:</strong> {% if contract.from_office %}Да{% else %}Нет{% endif %}<br>                         
@@ -183,11 +194,6 @@
                         <div class="row mt-4">
                                <ul class="nav nav-tabs" id="tabs" role="tablist">
                                 <li class="nav-item" role="presentation"><a class="nav-link active" id="comment-tab" data-bs-toggle="tab" data-bs-target="#comment" aria-controls="comment"> Комментарии</a></li>
-                                   {% if contract.user == user %}
-                                   <li class="nav-item" role="presentation"><a class="nav-link" id="update-tab" data-bs-toggle="tab" data-bs-target="#update" aria-controls="update">Изменение данных</a></li>
-                                   {% else %}
-                                   <li class="nav-item" role="presentation"><a class="nav-link" id="update-tab2" data-bs-toggle="tab" data-bs-target="#update" aria-controls="update">Изменение данных</a></li>
-                                   {% endif %}
                              </ul>
                          <div class="tab-content" id="tabsContent">
                              <div class="tab-pane fade show active" id="comment" role="tabpanel" aria-labelledby="home-tab">

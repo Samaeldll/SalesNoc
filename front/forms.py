@@ -81,14 +81,14 @@ class ContractInfoForm(forms.ModelForm):
             "city": (TextFormControl()),
             "address": (TextFormControl()),
             "phone": (TextFormControl()),
-            "service_first": readonly(TextFormControl()),  # Услуга №1
-            "service_two": readonly(TextFormControl()),  # Услуга №2
-            "conditions_first": (SelectFromControlTitle()),  # условия подключения услуги №1
-            "conditions_two": (SelectFromControl()),  # условия подключения услуги №2
-            "equipment_first": (SelectFromControl()),  # оборудование для услуги №1
-            "equipment_two": (SelectFromControl()),  # оборудование для услуги №2
-            "request_number": (TextFormControl()),  # номер заявки
-            "status": (SelectFromControl()),  # статус заявки
+            "service_first": readonly(TextFormControl()),
+            "service_two": readonly(TextFormControl()),
+            "conditions_first": (SelectFromControlTitle()),
+            "conditions_two": (SelectFromControl()),
+            "equipment_first": (SelectFromControl()),
+            "equipment_two": (SelectFromControl()),
+            "request_number": (TextFormControl()),
+            "status": (SelectFromControl()),
             "exodus_in": (SelectFromControl()),
             "exodus_tv": (SelectFromControl()),
         }
