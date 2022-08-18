@@ -10,6 +10,7 @@ NumberFormControl = lambda: forms.NumberInput(attrs={"class": "form-control"})
 TextFormControl = lambda: forms.TextInput(attrs={"class": "form-control"})
 TextAreaFormControl = lambda: forms.Textarea(attrs={"class": "form-control"})
 SelectFromControl = lambda: forms.Select(attrs={"class": "form-select"})
+SelectFromControlTitle = lambda: forms.Select(attrs={"class": "form-select", "placeholder": "information" })
 CheckBoxFormControl = lambda: forms.CheckboxInput(attrs={"type": "radio"})
 CheckboxSelectMultiple = lambda : forms.CheckboxInput(attrs={"class": "form-check-input"})
 
@@ -34,11 +35,11 @@ class LoginForm(forms.ModelForm):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         if not User.objects.filter(username=username).exists():
-            raise forms.ValidationError('Ошибка №500') #Несуществующий логин
+            raise forms.ValidationError('Несуществующий логин | Error #500') #Несуществующий логин
         user = User.objects.filter(username=username).first()
         if user:
             if not user.check_password(password):
-                raise forms.ValidationError('Ошибка №501') #Несуществующий пароль
+                raise forms.ValidationError('Неправильный пароль | Error #501') #Несуществующий пароль
         return self.cleaned_data
 
 
@@ -82,7 +83,7 @@ class ContractInfoForm(forms.ModelForm):
             "phone": (TextFormControl()),
             "service_first": readonly(TextFormControl()),  # Услуга №1
             "service_two": readonly(TextFormControl()),  # Услуга №2
-            "conditions_first": (SelectFromControl()),  # условия подключения услуги №1
+            "conditions_first": (SelectFromControlTitle()),  # условия подключения услуги №1
             "conditions_two": (SelectFromControl()),  # условия подключения услуги №2
             "equipment_first": (SelectFromControl()),  # оборудование для услуги №1
             "equipment_two": (SelectFromControl()),  # оборудование для услуги №2
@@ -90,16 +91,15 @@ class ContractInfoForm(forms.ModelForm):
             "status": (SelectFromControl()),  # статус заявки
             "exodus_in": (SelectFromControl()),
             "exodus_tv": (SelectFromControl()),
-            #"type_first": (SelectFromControl()),
-            #"type_two": (SelectFromControl()),
         }
         fields = widgets.keys()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        status_excluded = [0, 1]
-        self.fields["status"].choices = [(k,v) for k,v in self.fields["status"].choices if k not in status_excluded]
+        #status_excluded = [0, 1]
+        #self.fields["status"].choices = [(k,v) for k,v in self.fields["status"].choices if k not in status_excluded]
+
 
 class ContractHistorySearchForm(forms.Form):
     created_by = forms.ChoiceField(required=False)

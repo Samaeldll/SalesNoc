@@ -25,6 +25,7 @@
                 <li class="nav-item">
                     <a class="nav-link" aria-current="page" href="{% url 'contract_new' %}">Зафиксировать Обращение</a>
                 </li>
+                {% if not perms.front.class_sales %}{% else %}
                 <li class="nav-item dropdown">
                     <a class="nav-link btn dropdown-toggle" id="dropdownMenuButton1"
                        data-bs-toggle="dropdown">Заявки</a>
@@ -42,6 +43,7 @@
                 </li>
         </div>
     </div>
+    {% endif %}
     <div class="mr-2">
         <form class="form-inline my-2 my-lg-0 display:flex" action="{% url 'logout' %}">
             <span class="navbar-text mr-2">{{ request.user }}</span>

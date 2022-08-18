@@ -1,0 +1,30 @@
+
+.block {
+  width: 400px;
+  margin: 0 auto;
+  text-align: center;
+}
+  .block h3{
+    font-size: 1rem;
+    font-weight: bold ;
+    line-height: 1.5;
+    color: #212529;
+    margin-bottom: 1px;
+    border-radius: 8px 8px 0px 0px;
+    bold = bold;
+    padding: 6px 6px;
+  border: 1px solid #ced4da;
+  border-bottom: none;
+  margin-bottom: -2px;
+  }
+
+.btnMe {
+  text-decoration: none;
+  outline:none;
+  border:none;
+  background: none;
+  padding: 0;
+  color: green;
+  font-weight: bold;
+}
+

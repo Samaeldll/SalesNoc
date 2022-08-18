@@ -1,0 +1,19 @@
+{% block content %}
+        <div class="col">
+            <form action="{% url 'contract_update' contract.id %}" method="POST">
+                <div class="row mb-2 p-2 ">
+                    {% csrf_token %}
+                    <input type="hidden" name="contract_id" value="{{ contract.id }}">
+                    <div class="row">
+                        <div class="col"><label for="name" class="form-label">ФИО</label>
+                            <div class="input-group mb-3">{{ info_form.name }}</div>
+                    </div>
+                    <div class="row p-2">
+                        <div class="col">
+                            <button type="submit" class="btn btn-outline-success">Подтвердить изменение</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+{% endblock %}

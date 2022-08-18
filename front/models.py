@@ -175,7 +175,14 @@ class Statistic(models.Model):
 class Contract(models.Model):
     class Meta:
         permissions = [
-            ("contract_assign", "Может назначить пользователя на контракт"),
+            ("contract_assign", "Может назначить пользователя на выполнение заявки"),
+            ("contract_browse", "Может просматривать заявки"),
+            ("contract_create", "Может создавать заявки"),
+            ("contract_edit", "Может редактировать заявки"),
+            ("contract_comment", "Может добавлять комментарий к заявке"),
+            ("contract_close", "Может закрывать заявку"),
+            ("contract_time", "Может отложить заявку"),
+            ("contract_take", "Может брать заявку"),
         ]
 
     name = models.CharField("Фио", max_length=50)
@@ -190,7 +197,7 @@ class Contract(models.Model):
     user = models.ForeignKey(FrontUser, on_delete=models.SET_NULL, null=True)
     request_number = models.CharField(max_length=20, null=True, blank=True)
     contract_condition = models.TextField(null=True, blank=True)
-    tsv = SearchVectorField(null=True)
+    #tsv = SearchVectorField(null=True)
     state = models.SmallIntegerField(
         "Состояние",
         choices=STATE_CHOICE,
@@ -212,43 +219,53 @@ class Contract(models.Model):
         "Условия интернет",
         choices=CONDITIONS_CHOICE,
         default=CONDITIONS_STOCK_HOME,
-        null=True)
+        null=True,
+        blank = True)
     conditions_two = models.SmallIntegerField(
         "Условия телевиденье",
         choices=CONDITIONS_CHOICE,
         default=CONDITIONS_STOCK_TV,
-        null=True)
+        null=True,
+        blank = True)
     equipment_first = models.SmallIntegerField(
         "Оборудование интернет",
         choices=EQUIPMENT_CHOICE_IN,
         default=EQUIPMENT_7_IN,
-        null=True)  # Оборудование №2
+        null=True,
+        blank = True)  # Оборудование №2
     equipment_two = models.SmallIntegerField(
         "Оборудование телевиденье",
         choices=EQUIPMENT_CHOICE_TV,
         default=EQUIPMENT_TV_1,
-        null=True)  # Оборудование №2
+        null=True,
+        blank = True)  # Оборудование №2
     type_first = models.SmallIntegerField(
         "Тип подключения интернет",
         choices=CONNECTION_TYPE_INTERNET_CHOISE,
-        null=True)  # Тип подключение №1
+        null=True,
+        blank = True)  # Тип подключение №1
     type_two = models.SmallIntegerField(
         "Тип подключения телевиденье",
         choices=CONNECT_TYPE_TV_CHOISE,
-        null=True)  # Тип подключение №2
+        null=True,
+        blank = True)  # Тип подключение №2
     exodus_in = models.SmallIntegerField(
         "Исход интернет",
         choices=EXODUS_CHOICE,
+        blank=True,
         null=True,
         default=EXODUS_SOLVED)  # Исход
     exodus_tv = models.SmallIntegerField(
         "Исход телевиденье",
         choices=EXODUS_CHOICE,
+        blank=True,
         null=True,
         default=EXODUS_SOLVED)  # Исход
     status = models.SmallIntegerField(
         "Статус",
         choices=STATUS_CHOICE,
+        blank = True,
+        null = True,
         default=STATUS_NONE)  # Статус
     from_office = models.BooleanField("Офисное обращение", default=False)
     priority_service = models.CharField(

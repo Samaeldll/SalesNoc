@@ -23,6 +23,7 @@ FRONTEND_DIR = os.path.join(BASE_DIR, 'front')
 SECRET_KEY = 'django-insecure-z3i^c^%$o57pqiv(*pypy%fb8xg2bi#$g@++y!l_q_ybbe4j))'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -38,11 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
     "crispy_forms",
     "crispy_bootstrap5",
     'widget_tweaks',
     'front',
     'django.contrib.postgres',
+    #'webpush',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" #новое
@@ -57,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'front.middleware.timing_check'
 ]
 
@@ -117,6 +121,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'front.FrontUser'
 
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

@@ -1,5 +1,6 @@
 from django.contrib.auth.views import LogoutView
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
 
 from . import views
 from .views import LoginView
@@ -11,11 +12,12 @@ urlpatterns = [
     path('contract/archive/search/', views.ContractArchiveSearch.as_view(), name="ContractArchiveSearch"),
     path('contract/list/', views.contract_list, name="contract_list"),
     path('contract/list/my/', views.contract_list_my, name="contract_list_my"),
+    path('contract/list/my/created', views.contract_list_my, name="contract_list_my_created"),
     path('contract/list/<int:status>/', views.contract_list_by_status, name="contract_list_by_status"),
     path('contract/list/delayed/', views.contract_list_delayed, name="contract_list_delayed"),
     path('contract/list/active/', views.contract_list_active, name="contract_list_active"),
 
-    path('contract/<int:contract_id>/update/personal', views.contract_update_personal, name='contract_update_personal'),
+    #path('contract/<int:contract_id>/update/personal', views.contract_update_personal, name='contract_update_personal'),
     path('contract/<int:contract_id>/', views.contract_consider, name='contract_consider'),
     path('contract/<int:contract_id>/detail/update/', views.contract_update, name='contract_update'),
     path('contract/<int:contract_id>/detail/', views.contract_detail, name='contract_detail'),
@@ -38,3 +40,9 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page="/login"), name='logout')
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

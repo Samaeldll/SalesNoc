@@ -2647,6 +2647,7 @@ textarea.form-control-lg {
 }
 
 .input-group {
+  margin-top: -5px;
   position: relative;
   display: flex;
   flex-wrap: wrap;

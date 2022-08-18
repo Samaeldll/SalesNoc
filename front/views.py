@@ -4,6 +4,7 @@ import json
 import requests
 
 from django import views
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
@@ -54,7 +55,7 @@ class LoginView(views.View):
             user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
-                return HttpResponseRedirect('/contract/list')
+                return HttpResponseRedirect('/contract/')
         return render(request, 'login.html', {'form': form})
 
 
@@ -278,9 +279,10 @@ class ContractArchiveSearch(ListView):
         text = self.request.GET.get("text")
 
         vector = SearchVector('name', 'city', 'phone')
-        query = SearchQuery('&'.join([term + ':+' for term in text.split(' ') if len(term)]),
+        query = SearchQuery(' & '.join([term + ':+' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
         search_headline = SearchHeadline('name', query)
+
 
         contracts = Contract.objects \
             .annotate(rank = SearchRank(vector, query)) \
@@ -295,8 +297,7 @@ class ContractArchiveSearch(ListView):
 
     def get_queryset(self):
         text = self.request.GET.get("text")
-
-        query = SearchQuery('&'.join([term + ':+' for term in text.split(' ') if len(term)]),
+        query = SearchQuery(' & '.join([term + ':+' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
         return super().get_queryset().filter(tsv = query).annotate(rank = SearchRankCD(models.F('tsv'), query))
 
@@ -331,12 +332,24 @@ def contract_list(request):
 
 @login_required(login_url='/login')
 def contract_list_my(request):
-    include = [STATE_NOTPROCESSED, STATE_REPROCESSING]
+    include = [STATE_NOTPROCESSED, STATE_REPROCESSING, STATE_INPROGRESS]
     contracts = Contract.objects.filter(state__in=include, user=request.user).order_by("-id")
+    contractcs = Contract.objects.filter(created_by=request.user, create_date__gte=timezone.now() - datetime.timedelta(hours=24)).order_by("-id")
+
+    if request.method == "POST":
+        comment = request.POST.get("comment")
+        contract_id = request.POST.get("contracts")
+        contract = get_object_or_404(Contract, pk=contract_id)
+        contract.comment_add(request.user, comment)
+        return redirect(contract_list_my)
+
+
     return render(
         request,
         "contract_list_my.html",
-        {"contracts": contracts, **collect_contract_statistic()})
+        {"contracts": contracts, **collect_contract_statistic(),
+         "contractcs": contractcs,
+         })
 
 
 @login_required(login_url='/login')
@@ -377,17 +390,18 @@ def contract_list_delayed(request):
         {"contracts": contracts, **collect_contract_statistic()})
 
 
-def diff_with_form(form, contract, ignore_field: list = None):
+def diff_with_form(form, contract): #ignore_field: list = None
     res = {}
     for changed_key in form.changed_data:
-        if ignore_field is not None:
-            if changed_key in ignore_field:
-                continue
+        # if ignore_field is not None:
+        #     if changed_key in ignore_field:
+        #         continue
         field_key = changed_key
 
         localized = contract._meta.get_field(field_key).verbose_name
         old = getattr(contract, changed_key)
         new = form.cleaned_data[changed_key]
+
 
         if hasattr(contract, f"get_{field_key}_display"):
             old = getattr(contract, f"get_{field_key}_display")()
@@ -431,60 +445,23 @@ def contract_update(request, contract_id):
     if request.method == "POST":
         form = ContractInfoForm(data=request.POST, instance=contract)
         if form.is_valid():
-            comment = request.POST.get("comments")
             diff = diff_with_form(
                 form,
-                Contract.objects.get(pk=contract_id),
-                ignore_field=["service_first", "service_two"])
-
-            contract = form.save(commit=False)
-            new_date = request.POST.get("planning_later")
-            is_infinity = bool(request.POST.get("infinity_delay"))
-            if new_date or is_infinity:
-                if contract.plain_later:
-                    messages.add_message(
-                        request,
-                        messages.ERROR,
-                        "Дата у этой заявки уже указана. Изменения не зафиксированы")
-                    return redirect("/contract")
-
-
-                diff["later"] = {
-                    "localized_key": "Планирование",
-                    "old":           "Активна",
-                    "new":           "Отложена заявка на неопеределенный срок"
-                }
-
-                contract.infinity_plain = True
-                if not is_infinity:
-                    contract.plain_later = datetime.datetime.strptime(
-                        new_date,
-                        "%Y-%m-%dT%H:%M")
-                    diff["later"] = {
-                        "localized_key": "Планирование",
-                        "old":           "Активна",
-                        "new":           f"Отложена заявка до {contract.plain_later}"
-                    }
-                    contract.infinity_plain = False
-
+                Contract.objects.get(pk=contract_id))
             contract.save()
-            cmnt = CommentRow(
-                user=request.user,
-                changes=dictDiff2html(diff),
-                text=comment)
+            cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
             cmnt.save()
 
             contract.comments.add(cmnt)
 
         return redirect(contract_consider, contract_id)
 
-    return render(
-        request, "consider_contract.html", {
-            "contract_id": contract_id,
-            "info_form":   info_form,
-            "contract":    contract,
-            "users":       FrontUser.objects.all()
-        })
+    return render(request, "consider_contract.html", {
+        "contract_id": contract_id,
+        "info_form": info_form,
+        "contract": contract,
+        "users": User.objects.all()
+    })
 
 
 @login_required(login_url='/login')
@@ -495,10 +472,11 @@ def contract_update_personal(request, contract_id):
     if request.method == "POST":
         form = ContractInfoForm(data=request.POST, instance=contract)
         if form.is_valid():
-            comment = request.POST.get("comments")
+            print(form.fields)
             diff = diff_with_form(
                 form,
                 Contract.objects.get(pk=contract_id))
+                # ignore_field=["service_first", "service_two"]
             contract.save()
             cmnt = CommentRow(
                 user=request.user,
@@ -538,11 +516,13 @@ def contract_close(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     if contract.status == STATUS_COMPLETE or contract.status == STATUS_INCORRECT:
         contract.state = STATE_COMPLETE
+        contract.user = None
         messages.add_message(request, messages.SUCCESS, "Успешно закрыто")
 
     if contract.state == STATE_INPROGRESS:
         contract.state = STATE_NOTPROCESSED
         contract.status = STATUS_NONE
+        contract.user = None
         messages.add_message(request, messages.SUCCESS, "Заявка была отложена, проверьте указанный вами статус.")
 
     assign_user = least_active_user()
