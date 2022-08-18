@@ -272,7 +272,7 @@ class Contract(models.Model):
         "Приоритетная Услуга",
         max_length=15,
         choices=SERVICE_CHOICE,
-        default='1',
+        default='SERVICE_A',
         blank=True)
 
     create_date = models.DateTimeField(auto_now_add=True)

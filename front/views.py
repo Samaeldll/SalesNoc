@@ -167,7 +167,7 @@ def contract_new(request):
         if form.is_valid():
             contract = form.save(commit=False)
             contract.created_by = request.user
-            contract.status = STATUS_NONE
+            contract.state = STATE_NOTPROCESSED
 
             assign_user = least_active_user()
             if assign_user is not None:
@@ -524,7 +524,7 @@ def contract_close(request, contract_id):
         contract.state = STATE_NOTPROCESSED
         contract.status = STATUS_NONE
         contract.user = None
-        messages.add_message(request, messages.SUCCESS, "Заявка была отложена, проверьте указанный вами статус.")
+        messages.add_message(request, messages.SUCCESS, "Заявка была возвращена, проверьте указанный вами статус.")
 
     assign_user = least_active_user()
     if assign_user is not None:

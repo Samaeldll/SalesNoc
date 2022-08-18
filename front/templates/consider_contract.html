@@ -133,11 +133,12 @@
                             <div class="col-sm">
                                 <strong>Состояние Заявки:</strong> {{contract.get_state_display }}<br>
                                 <strong>Статус:</strong> {{ contract.get_status_display }}<br>
+                                <strong>Выполняющий: </strong>{% if contract.user %}
+                                {{ contract.user.first_name }} {{ contract.user.last_name }} {% else %}Отсутствует  {% endif %}<br>
                             </div>
                             <div class="col">
-                                <strong>Выполняющий: </strong>{% if contract.user %}
-                                {{ contract.user.first_name }} {{ contract.user.last_name }} {% else %}Не назначено{% endif %}<br>
-                                <strong>Офисное обращение:</strong> {% if contract.from_office %}Да{% else %}Нет{% endif %}<br>                         
+                                <strong>Офисное обращение:</strong> {% if contract.from_office %}Да{% else %}Нет{% endif %}<br>
+                                <strong>Приоритетная услуга:</strong> {{ contract.priority_service.value }}
                             </div>
                         </div>
                         <div class="row">

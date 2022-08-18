@@ -21,8 +21,15 @@
             {% endblock type1 %}
 
             {% block type2 %}
-            {% for contract in contracts %}
             <div class="tab-pane fade" id="appoint" role="tabpanel" aria-labelledby="profile-tab">
+                {% if not contracts %}
+            <div class="row mt-5">
+                <div class="col">
+                    <h5>Список активных заявок - пуст</h5>
+                </div>
+            </div>
+                {% endif %}
+                {% for contract in contracts %}
                 <div class="row border mt-3 p-2">
                     <div class="col">
                         <div class="row align-items-center">

@@ -64,7 +64,7 @@
                         </div>
                         {% endif %}
                         {% endfor %}
-                        Введите комментарий:
+                        <strong> Введите комментарий: </strong>
                         <form action="" method="POST">
                             {% csrf_token %}
                             <input type="hidden" name="contracts" value="{{ contract.id }}" required="true">
