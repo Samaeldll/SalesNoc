@@ -197,7 +197,7 @@ class Contract(models.Model):
     user = models.ForeignKey(FrontUser, on_delete=models.SET_NULL, null=True)
     request_number = models.CharField(max_length=20, null=True, blank=True)
     contract_condition = models.TextField(null=True, blank=True)
-    #tsv = SearchVectorField(null=True)
+    tsv = SearchVectorField(null=True)
     state = models.SmallIntegerField(
         "Состояние",
         choices=STATE_CHOICE,

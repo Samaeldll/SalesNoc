@@ -138,7 +138,7 @@ def least_workload_user(users):
     contracts = Contract.objects.filter(state__in=[STATE_NOTPROCESSED, STATE_INPROGRESS]).values("user")
     contract_users = list(map(lambda x: x["user"], contracts))
     for user in users:
-        if user.id not in contract_users:
+        if user.id not in contracts:
             return user
 
 
@@ -173,6 +173,10 @@ def contract_new(request):
             if assign_user is not None:
                 contract.user = assign_user
                 contract.state = STATE_INPROGRESS
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    f"Пользователь {assign_user} получил заявку")
             else:
                 Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
@@ -524,9 +528,12 @@ def contract_close(request, contract_id):
         contract.state = STATE_NOTPROCESSED
         contract.status = STATUS_NONE
         contract.user = None
+        contract.history_add(request.user, "Вернул заявку в ожидание обработки")
         messages.add_message(request, messages.SUCCESS, "Заявка была возвращена, проверьте указанный вами статус.")
 
-    assign_user = least_active_user()
+    print(get_active_users())
+    print(least_active_user())
+    assign_user= least_active_user()
     if assign_user is not None:
         contract.user = assign_user
         contract.state = STATE_INPROGRESS
@@ -534,7 +541,6 @@ def contract_close(request, contract_id):
         Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
     contract.save()
-    contract.history_add(request.user, "Задача закрыта")
 
     return redirect(reverse("contract_consider", args=[contract.id]))
 
