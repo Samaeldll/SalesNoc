@@ -15,9 +15,10 @@
                             <strong>Телефон: </strong>{{ contract.phone }}
                             <strong>Адрес: </strong> г. {{ contract.city }}, ул. {{ contract.address }}
                             {% if not contract.state == 3 %}
-                            {% if contract.user == user %}
-                            <button class="btnMe" data-bs-toggle="modal" data-bs-target="#EditData"> Изменить Данные</button>
-                            {% endif %}{% endif %}
+                                {% if contract.user == user %}
+                                    <button class="btnMe" data-bs-toggle="modal" data-bs-target="#EditData">Изменить Данные</button>
+                                {% endif %}
+                            {% endif %}
                             <hr>
                         </div>
                         <div class="row mb-2">

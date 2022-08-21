@@ -36,7 +36,7 @@ from .models import (
     STATE_LATER,
     STATE_INPROGRESS,
     STATUS_NONE, CommentRow,
-    FrontUser, Statistic, STATISTIC_NO_AUTO_ASSIGN
+    FrontUser, Statistic, STATISTIC_NO_AUTO_ASSIGN, User
 )
 
 
@@ -114,12 +114,12 @@ def filter_away_users(online, offline):
     return res
 
 def get_users():
-    url = 'http://dev.noc.shtorm.net/api/voip/register/sales/'
-    token = "c1f45fba1b463abf5a92aaf339d6b6e9c93b013d"
-    headers = {"Authorization": f"Token {token}", 'Accept': 'application/json'}
-    response = requests.get(url, headers=headers)
-    data = response.json()
-    return data
+    # url = 'http://dev.noc.shtorm.net/api/voip/register/sales/'
+    # token = "c1f45fba1b463abf5a92aaf339d6b6e9c93b013d"
+    # headers = {"Authorization": f"Token {token}", 'Accept': 'application/json'}
+    # response = requests.get(url, headers=headers)
+    # data = response.json()
+    return [] # todo : вернуть обратно data
 
 
 def get_active_users():
@@ -150,7 +150,6 @@ def least_active_user():
     if not found_users.exists():
         return
 
-    print(found_users)
     user = least_workload_user(found_users)
     if user is None:
         return
@@ -398,15 +397,41 @@ def contract_list_delayed(request):
         {"contracts": contracts, **collect_contract_statistic()})
 
 
-def diff_with_form(form, contract): #ignore_field: list = None
+def localized_key(model, key):
+    return model._meta.get_field(key).verbose_name
+
+
+def diff_with_post(data, contract):
+    res = {}
+    for changed_key in data:
+        field_key = changed_key
+
+        if field_key == "csrfmiddlewaretoken":
+            continue
+
+        localized = localized_key(contract, field_key)
+        old = getattr(contract, changed_key)
+        new = data[changed_key]
+
+        res.update(
+            {
+                field_key: {
+                    "localized_key": localized,
+                    "old":           old,
+                    "new":           new
+                }
+            })
+
+    return res
+
+def diff_with_form(form, contract):
     res = {}
     for changed_key in form.changed_data:
         field_key = changed_key
 
-        localized = contract._meta.get_field(field_key).verbose_name
+        localized = localized_key(contract, field_key)
         old = getattr(contract, changed_key)
         new = form.cleaned_data[changed_key]
-
 
         if hasattr(contract, f"get_{field_key}_display"):
             old = getattr(contract, f"get_{field_key}_display")()
@@ -421,7 +446,7 @@ def diff_with_form(form, contract): #ignore_field: list = None
                     "new":           new
                 }
             })
-        print(res)
+
     return res
 
 
@@ -447,25 +472,40 @@ def contract_consider(request, contract_id):
 @login_required(login_url='/login')
 def contract_update(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
-    info_form = ContractInfoForm(instance=contract)
+    form = ContractInfoForm(request.POST, instance=contract)
 
     if request.method == "POST":
-        form = ContractInfoForm(data=request.POST, instance=contract)
-        if form.is_valid():
-            print(request.POST)
-            diff = diff_with_form(
-                form,
-                Contract.objects.get(pk=contract_id))
-            contract.save()
-            cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
-            cmnt.save()
+        # FIXME: Такая проблема возникла потому что, используется одна общая форма
+        # Лучше всего будет разделить ContractInfoForm на несколько, также как и в браузере на блоках
+        # if not form.is_valid():
+        #     messages.add_message(request, messages.ERROR, "Не правильно заполнена форма")
+        #     return redirect(contract_consider, contract_id)
 
-            contract.comments.add(cmnt)
+        for (k, v) in request.POST.items():
+            if v is None:
+                continue
+
+            if v == "csrfmiddlewaretoken":
+                continue
+
+            setattr(contract, k, v)
+
+        contract.save()
+
+        diff = diff_with_post(
+            request.POST,
+            Contract.objects.get(pk=contract_id))
+
+        cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
+        cmnt.save()
+        contract.comments.add(cmnt)
+
+        messages.add_message(request, messages.SUCCESS, "Заявка успешно изменена")
         return redirect(contract_consider, contract_id)
 
     return render(request, "consider_contract.html", {
         "contract_id": contract_id,
-        "info_form": info_form,
+        "info_form": form,
         "contract": contract,
         "users": User.objects.all()
     })

@@ -94,12 +94,12 @@ class ContractInfoForm(forms.ModelForm):
         }
         fields = widgets.keys()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        #status_excluded = [0, 1]
-        #self.fields["status"].choices = [(k,v) for k,v in self.fields["status"].choices if k not in status_excluded]
-
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #
+    #     #status_excluded = [0, 1]
+    #     #self.fields["status"].choices = [(k,v) for k,v in self.fields["status"].choices if k not in status_excluded]
+    #
 
 class ContractHistorySearchForm(forms.Form):
     created_by = forms.ChoiceField(required=False)
