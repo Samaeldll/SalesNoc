@@ -17,7 +17,7 @@ urlpatterns = [
     path('contract/list/delayed/', views.contract_list_delayed, name="contract_list_delayed"),
     path('contract/list/active/', views.contract_list_active, name="contract_list_active"),
 
-    #path('contract/<int:contract_id>/update/personal', views.contract_update_personal, name='contract_update_personal'),
+    path('contract/<int:contract_id>/update/internet', views.contract_update_internet, name='contract_update_internet'),
     path('contract/<int:contract_id>/', views.contract_consider, name='contract_consider'),
     path('contract/<int:contract_id>/detail/update/', views.contract_update, name='contract_update'),
     path('contract/<int:contract_id>/detail/', views.contract_detail, name='contract_detail'),

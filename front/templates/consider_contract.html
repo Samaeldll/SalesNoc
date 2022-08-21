@@ -81,15 +81,15 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form action="{% url 'contract_update' contract.id %}" method="POST">
+                                            <form action="{% url 'contract_update_internet' contract.id %}" method="POST">
                                         <div class="col">
                                             {% csrf_token %}
                                             <center><b> Условия Подключения </b></center>
-                                            <div class="input-group mb-3 mt-1">{{ info_form.conditions_first }}</div>
+                                            <div class="input-group mb-3 mt-1">{{ info_form_in.conditions_first }}</div>
                                             <center><b> Оборудование </b></center>
-                                            <div class="input-group mb-3 mt-1">{{ info_form.equipment_first }}</div>
+                                            <div class="input-group mb-3 mt-1">{{ info_form_in.equipment_first }}</div>
                                             <center><b> Исход </b></center>
-                                            <div class="input-group mb-3 mt-1">{{ info_form.exodus_in }}</div>
+                                            <div class="input-group mb-3 mt-1">{{ info_form_in.exodus_in }}</div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>

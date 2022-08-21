@@ -83,8 +83,6 @@ def dict2html(data, model):
 
     return "".join(res)
 
-
-
 def dictDiff2html(data):
     res = []
     for key, diff in data.items():
@@ -114,12 +112,12 @@ def filter_away_users(online, offline):
     return res
 
 def get_users():
-    # url = 'http://dev.noc.shtorm.net/api/voip/register/sales/'
-    # token = "c1f45fba1b463abf5a92aaf339d6b6e9c93b013d"
-    # headers = {"Authorization": f"Token {token}", 'Accept': 'application/json'}
-    # response = requests.get(url, headers=headers)
-    # data = response.json()
-    return [] # todo : вернуть обратно data
+    url = 'http://dev.noc.shtorm.net/api/voip/register/sales/'
+    token = "c1f45fba1b463abf5a92aaf339d6b6e9c93b013d"
+    headers = {"Authorization": f"Token {token}", 'Accept': 'application/json'}
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    return []
 
 
 def get_active_users():
@@ -478,40 +476,51 @@ def contract_consider(request, contract_id):
 @login_required(login_url='/login')
 def contract_update(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
-    form = ContractInfoForm(request.POST, instance=contract)
+    info_form = ContractInfoForm(instance=contract)
+    info_form_in = ContractInfoFormInternet(instance=contract)
 
     if request.method == "POST":
-        # FIXME: Такая проблема возникла потому что, используется одна общая форма
-        # Лучше всего будет разделить ContractInfoForm на несколько, также как и в браузере на блоках
-        # if not form.is_valid():
-        #     messages.add_message(request, messages.ERROR, "Не правильно заполнена форма")
-        #     return redirect(contract_consider, contract_id)
+        form = ContractInfoForm(data=request.POST, instance=contract)
+        if form.is_valid():
+            diff = diff_with_form(
+                form,
+                Contract.objects.get(pk=contract_id))
+            contract.save()
+            cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
+            cmnt.save()
 
-        for (k, v) in request.POST.items():
-            if v is None:
-                continue
-
-            if v == "csrfmiddlewaretoken":
-                continue
-
-            setattr(contract, k, v)
-
-        contract.save()
-
-        diff = diff_with_post(
-            request.POST,
-            Contract.objects.get(pk=contract_id))
-
-        cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
-        cmnt.save()
-        contract.comments.add(cmnt)
-
-        messages.add_message(request, messages.SUCCESS, "Заявка успешно изменена")
+            contract.comments.add(cmnt)
         return redirect(contract_consider, contract_id)
 
     return render(request, "consider_contract.html", {
         "contract_id": contract_id,
-        "info_form": form,
+        "info_form": info_form,
+        "info_form_in": info_form_in,
+        "contract": contract,
+        "users": User.objects.all()
+    })
+
+@login_required(login_url='/login')
+def contract_update_internet(request, contract_id):
+    contract = get_object_or_404(Contract, pk=contract_id)
+    info_form_in = ContractInfoFormInternet(instance=contract)
+
+    if request.method == "POST":
+        form = ContractInfoFormInternet(data=request.POST, instance=contract)
+        if form.is_valid():
+            diff = diff_with_form(
+                form,
+                Contract.objects.get(pk=contract_id))
+            contract.save()
+            cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
+            cmnt.save()
+
+            contract.comments.add(cmnt)
+        return redirect(contract_consider, contract_id)
+
+    return render(request, "consider_contract.html", {
+        "contract_id": contract_id,
+        "info_form_in": info_form_in,
         "contract": contract,
         "users": User.objects.all()
     })

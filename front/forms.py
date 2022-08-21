@@ -81,16 +81,16 @@ class ContractInfoForm(forms.ModelForm):
             "city": (TextFormControl()),
             "address": (TextFormControl()),
             "phone": (TextFormControl()),
-            "service_first": readonly(TextFormControl()),
-            "service_two": readonly(TextFormControl()),
-            "conditions_first": (SelectFromControlTitle()),
-            "conditions_two": (SelectFromControl()),
-            "equipment_first": (SelectFromControl()),
-            "equipment_two": (SelectFromControl()),
-            "request_number": (TextFormControl()),
-            "status": (SelectFromControl()),
-            "exodus_in": (SelectFromControl()),
-            "exodus_tv": (SelectFromControl()),
+            # "service_first": readonly(TextFormControl()),
+            # "service_two": readonly(TextFormControl()),
+            # "conditions_first": (SelectFromControlTitle()),
+            # "conditions_two": (SelectFromControl()),
+            # "equipment_first": (SelectFromControl()),
+            # "equipment_two": (SelectFromControl()),
+            # "request_number": (TextFormControl()),
+            # "status": (SelectFromControl()),
+            # "exodus_in": (SelectFromControl()),
+            # "exodus_tv": (SelectFromControl()),
         }
         fields = widgets.keys()
 
@@ -100,6 +100,17 @@ class ContractInfoForm(forms.ModelForm):
     #     #status_excluded = [0, 1]
     #     #self.fields["status"].choices = [(k,v) for k,v in self.fields["status"].choices if k not in status_excluded]
     #
+
+class ContractInfoFormInternet(forms.ModelForm):
+    class Meta:
+        model = Contract
+        widgets = {
+            "service_first": readonly(TextFormControl()),
+            "conditions_first": (SelectFromControlTitle()),
+            "equipment_first": (SelectFromControl()),
+            "exodus_in": (SelectFromControl()),
+        }
+        fields = widgets.keys()
 
 class ContractHistorySearchForm(forms.Form):
     created_by = forms.ChoiceField(required=False)
