@@ -176,6 +176,12 @@ def contract_new(request):
                     request,
                     messages.SUCCESS,
                     f"Пользователь {assign_user} получил заявку")
+
+                comment_row = CommentRow(
+                    user=request.user,
+                    text=f"Пользователь {assign_user} получил заявку")
+                comment_row.save()
+                contract.comments.add(comment_row)
             else:
                 Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
