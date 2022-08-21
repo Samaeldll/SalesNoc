@@ -117,6 +117,7 @@
                                             <div class="input-group mt-1">{{ info_form.equipment_two }}</div>
                                             <center><b> Исход </b></center>
                                             <div class="input-group mt-1">{{ info_form.exodus_tv }}</div>
+                                            <div class="input-group mt-1">{{ info_form.status }}</div>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -138,7 +139,7 @@
                             </div>
                             <div class="col">
                                 <strong>Офисное обращение:</strong> {% if contract.from_office %}Да{% else %}Нет{% endif %}<br>
-                                <strong>Приоритетная услуга:</strong> {{ contract.priority_service.value }}
+                                <strong>Приоритетная услуга:</strong> {{ contract.priority_service }}
                             </div>
                         </div>
                         <div class="row">

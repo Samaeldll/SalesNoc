@@ -88,9 +88,9 @@ def dict2html(data, model):
 def dictDiff2html(data):
     res = []
     for key, diff in data.items():
-        if diff['new'] is None or not diff['new']:
-             pass
-        else:
+        # if diff['new'] is None or not diff['new']:
+        #      pass
+        # else:
             res.append(
                 f"<div class='db_field db_field_{key}'>"
                 f"   <strong>{diff['localized_key']}:</strong> "
@@ -112,7 +112,6 @@ def filter_away_users(online, offline):
         if not is_away:
             res.append(on_item)
     return res
-
 
 def get_users():
     url = 'http://dev.noc.shtorm.net/api/voip/register/sales/'
@@ -151,6 +150,7 @@ def least_active_user():
     if not found_users.exists():
         return
 
+    print(found_users)
     user = least_workload_user(found_users)
     if user is None:
         return
@@ -287,7 +287,7 @@ class ContractArchiveSearch(ListView):
         text = self.request.GET.get("text")
 
         vector = SearchVector('name', 'city', 'phone')
-        query = SearchQuery(' & '.join([term + ':+' for term in text.split(' ') if len(term)]),
+        query = SearchQuery(' & '.join([term + ':*' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
         search_headline = SearchHeadline('name', query)
 
@@ -305,7 +305,7 @@ class ContractArchiveSearch(ListView):
 
     def get_queryset(self):
         text = self.request.GET.get("text")
-        query = SearchQuery(' & '.join([term + ':+' for term in text.split(' ') if len(term)]),
+        query = SearchQuery(' & '.join([term + ':*' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
         return super().get_queryset().filter(tsv = query).annotate(rank = SearchRankCD(models.F('tsv'), query))
 
@@ -411,6 +411,7 @@ def diff_with_form(form, contract): #ignore_field: list = None
         if hasattr(contract, f"get_{field_key}_display"):
             old = getattr(contract, f"get_{field_key}_display")()
             new = dict(form.fields.get(field_key).choices).get(form.cleaned_data.get(field_key))
+            #new = dict(form.fields[field_key].choices)[form.cleaned_data[field_key]]
 
         res.update(
             {
@@ -420,6 +421,7 @@ def diff_with_form(form, contract): #ignore_field: list = None
                     "new":           new
                 }
             })
+        print(res)
     return res
 
 
@@ -450,15 +452,15 @@ def contract_update(request, contract_id):
     if request.method == "POST":
         form = ContractInfoForm(data=request.POST, instance=contract)
         if form.is_valid():
+            print(request.POST)
             diff = diff_with_form(
                 form,
                 Contract.objects.get(pk=contract_id))
-            #contract.save()
+            contract.save()
             cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
             cmnt.save()
 
             contract.comments.add(cmnt)
-        print(form.errors)
         return redirect(contract_consider, contract_id)
 
     return render(request, "consider_contract.html", {
@@ -467,40 +469,6 @@ def contract_update(request, contract_id):
         "contract": contract,
         "users": User.objects.all()
     })
-
-
-@login_required(login_url='/login')
-def contract_update_personal(request, contract_id):
-    contract = get_object_or_404(Contract, pk=contract_id)
-    form_info = ContractInfoForm(instance=contract)
-
-    if request.method == "POST":
-        form = ContractInfoForm(data=request.POST, instance=contract)
-        if form.is_valid():
-            print(form.fields)
-            diff = diff_with_form(
-                form,
-                Contract.objects.get(pk=contract_id))
-                # ignore_field=["service_first", "service_two"]
-            contract.save()
-            cmnt = CommentRow(
-                user=request.user,
-                changes=dictDiff2html(diff),
-                text=comment)
-            cmnt.save()
-
-            contract.comments.add(cmnt)
-
-        return redirect(contract_consider, contract_id)
-
-    return render(
-        request, "consider_contract.html", {
-            "contract_id": contract_id,
-            "form_info":   form_info,
-            "contract":    contract,
-            "users":       FrontUser.objects.all()
-        })
-
 
 @login_required(login_url='/login')
 def contract_call(request, contract_id):
@@ -531,8 +499,6 @@ def contract_close(request, contract_id):
         contract.history_add(request.user, "Вернул заявку в ожидание обработки")
         messages.add_message(request, messages.SUCCESS, "Заявка была возвращена, проверьте указанный вами статус.")
 
-    print(get_active_users())
-    print(least_active_user())
     assign_user= least_active_user()
     if assign_user is not None:
         contract.user = assign_user
