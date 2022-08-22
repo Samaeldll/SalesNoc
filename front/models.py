@@ -109,6 +109,7 @@ CONNECT_TYPE_INTERNET_RADIO_TO_HOUSE = 4
 CONNECT_TYPE_INTERNET_INDIVIDUAL_TO_ALL = 5
 
 CONNECTION_TYPE_INTERNET_CHOISE = (
+    (CONNECT_TYPE_INTERNET_UNKNOWN, "Не выбрано"),
     (CONNECT_TYPE_INTERNET_HOME_TO_CITY, "HOME в Многокварт."),
     (CONNECT_TYPE_INTERNET_GPON_TO_CITY, "GPON в Многокварт."),
     (CONNECT_TYPE_INTERNET_GPON_TO_HOUSE, "GPON в Частный"),
@@ -185,10 +186,10 @@ class Contract(models.Model):
             ("contract_take", "Может брать заявку"),
         ]
 
-    name = models.CharField("Фио", max_length=50, blank=True)
-    city = models.CharField("Город", max_length=50, blank=True)
-    address = models.CharField("Адрес", max_length=100, blank=True)
-    phone = models.CharField("Телефон", max_length=20, blank=True)
+    name = models.CharField("Фио", max_length=50)
+    city = models.CharField("Город", max_length=50)
+    address = models.CharField("Адрес", max_length=100)
+    phone = models.CharField("Телефон", max_length=20)
 
     created_by = models.ForeignKey(
         FrontUser, verbose_name="Создатель", on_delete=models.SET_NULL, null=True,
@@ -201,79 +202,57 @@ class Contract(models.Model):
     state = models.SmallIntegerField(
         "Состояние",
         choices=STATE_CHOICE,
-        default=STATE_NOTPROCESSED,
-        blank=True)  # состояние
+        default=STATE_NOTPROCESSED)  # состояние
     service_first = models.CharField(
         "Услуга",
         max_length=50,
-        default="Интернет",
-        blank=True,
-        null=True)  # Услуга №1
+        default="Интернет")  # Услуга №1
     service_two = models.CharField(
         "Услуга",
         max_length=50,
-        default="Телевиденье",
-        blank=True,
-        null=True)  # Услуга №2
+        default="Телевиденье")  # Услуга №2
     conditions_first = models.SmallIntegerField(
         "Условия интернет",
         choices=CONDITIONS_CHOICE,
-        default=CONDITIONS_STOCK_HOME,
-        null=True,
-        blank = True)
+        default=CONDITIONS_STOCK_HOME)
     conditions_two = models.SmallIntegerField(
         "Условия телевиденье",
         choices=CONDITIONS_CHOICE,
-        default=CONDITIONS_STOCK_TV,
-        null=True,
-        blank = True)
+        default=CONDITIONS_STOCK_TV)
     equipment_first = models.SmallIntegerField(
         "Оборудование интернет",
         choices=EQUIPMENT_CHOICE_IN,
-        default=EQUIPMENT_7_IN,
-        null=True,
-        blank = True)  # Оборудование №2
+        default=EQUIPMENT_7_IN)  # Оборудование №2
     equipment_two = models.SmallIntegerField(
         "Оборудование телевиденье",
         choices=EQUIPMENT_CHOICE_TV,
-        default=EQUIPMENT_TV_1,
-        null=True,
-        blank = True)  # Оборудование №2
+        default=EQUIPMENT_TV_1)  # Оборудование №2
     type_first = models.SmallIntegerField(
         "Тип подключения интернет",
         choices=CONNECTION_TYPE_INTERNET_CHOISE,
-        null=True,
-        blank = True)  # Тип подключение №1
+        default=CONNECT_TYPE_INTERNET_UNKNOWN)  # Тип подключение №1
     type_two = models.SmallIntegerField(
         "Тип подключения телевиденье",
         choices=CONNECT_TYPE_TV_CHOISE,
-        null=True,
-        blank = True)  # Тип подключение №2
+        default=CONNECT_TYPE_UNKNOWN)  # Тип подключение №2
     exodus_in = models.SmallIntegerField(
         "Исход интернет",
         choices=EXODUS_CHOICE,
-        blank=True,
-        null=True,
         default=EXODUS_SOLVED)  # Исход
     exodus_tv = models.SmallIntegerField(
         "Исход телевиденье",
         choices=EXODUS_CHOICE,
-        blank=True,
-        null=True,
         default=EXODUS_SOLVED)  # Исход
     status = models.SmallIntegerField(
         "Статус",
         choices=STATUS_CHOICE,
-        blank = True,
-        null = True,
         default=STATUS_NONE)  # Статус
     from_office = models.BooleanField("Офисное обращение", default=False)
     priority_service = models.CharField(
         "Приоритетная Услуга",
         max_length=15,
         choices=SERVICE_CHOICE,
-        default='SERVICE_A',
-        blank=True)
+        default='SERVICE_A',)
 
     create_date = models.DateTimeField(auto_now_add=True)
     # closed_time = models.DateTimeField(auto_now_add=True)
