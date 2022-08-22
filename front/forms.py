@@ -81,15 +81,8 @@ class ContractInfoForm(forms.ModelForm):
             "city": (TextFormControl()),
             "address": (TextFormControl()),
             "phone": (TextFormControl()),
-            # "service_first": readonly(TextFormControl()),
-            # "service_two": readonly(TextFormControl()),
-            # "conditions_first": (SelectFromControlTitle()),
             # "conditions_two": (SelectFromControl()),
-            # "equipment_first": (SelectFromControl()),
             # "equipment_two": (SelectFromControl()),
-            # "request_number": (TextFormControl()),
-            # "status": (SelectFromControl()),
-            # "exodus_in": (SelectFromControl()),
             # "exodus_tv": (SelectFromControl()),
         }
         fields = widgets.keys()
@@ -105,12 +98,22 @@ class ContractInfoFormInternet(forms.ModelForm):
     class Meta:
         model = Contract
         widgets = {
-            "service_first": readonly(TextFormControl()),
             "conditions_first": (SelectFromControlTitle()),
             "equipment_first": (SelectFromControl()),
             "exodus_in": (SelectFromControl()),
         }
         fields = widgets.keys()
+
+class ContractInfoFormTelevision(forms.ModelForm):
+    class Meta:
+        model = Contract
+        widgets = {
+            "conditions_two": (SelectFromControlTitle()),
+            "equipment_two": (SelectFromControl()),
+            "exodus_tv": (SelectFromControl()),
+        }
+        fields = widgets.keys()
+
 
 class ContractHistorySearchForm(forms.Form):
     created_by = forms.ChoiceField(required=False)

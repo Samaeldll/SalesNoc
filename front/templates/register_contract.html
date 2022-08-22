@@ -1,6 +1,7 @@
 {% extends "body.html" %}
-{% load static %}
 {% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/stylesheet.css' %}">
     <style>
         ul {
             list-style-type: none;
@@ -11,12 +12,11 @@
             <div class="row">
                 <center><h2>Фиксация Обращения</h2></center>
             </div>
-            <form action="{% url "contract_new" %}" method="POST">
+            <form action="{% url 'contract_new' %}" method="POST">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col">
-                        <label for="name" class="form-label">Фамилия Имя
-                            Отчество</label>
+                        <label for="name" class="form-label">Фамилия Имя Отчество</label>
                         <div class="input-group mb-3 ">
                             {{ form.name }}
                             {{ form.name.errors }}
@@ -44,17 +44,39 @@
                             {{ form.address }}
                             {{ form.address.errors }}
                         </div>
-                        <div id="addressFound" class="invalid-feedback">
-                            Заявка с данными параметрами уже существует
+                        <div id="addressFound" class="invalid-feedbackMe">
+                            <div class="mb-2">
+                            Найдены заявки с похожими параметрами
+                            <button type="button" class="btnMe" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                Посмотреть результаты
+                            </button>
+                                </div>
+                            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialogMe">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel">Результаты Поиска</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                           <strong id="someId"></strong>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+        </div>
                 <!-- <div class="form-check form-check-inline">
                             {{ form.from_office }}
                             {{ form.from_office.errors  }}
                         <label class="form-check-label" for="inlineCheckbox1">Офисное Обращение</label>
                 </div> -->
-                <div class="row">
+                <div class="row p-3">
                     <div class="col-sm">
                         <label for="name" class="form-label">Услуга интересующая абонента:</label>
                         {% for checkbox in form.priority_service %}
@@ -74,7 +96,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
                 <div class="row mt-3">
                     <div class="col">
                         <label for="address" class="form-label">Комментарий</label>
@@ -91,13 +112,52 @@
             </form>
         </div>
     </div>
-    <script>
+<script>
+
         const addressFoundWarning = document.querySelector("#addressFound")
         const address = document.querySelector("#id_address")
+
+        const target = document.querySelector("#someId") // куда пишем
         address.addEventListener("keyup", (e) => {
             fetch("/check/address/?text=" + address.value).then((res) => {
                 res.json().then((r) => {
                     const found = r.found
+                    const data = r.data
+
+                    target.innerHTML = ""
+                    data.forEach((v) => {
+                        target.innerHTML +=
+                        `
+                 <div class="container">
+                     <div class="row border mt-2 p-4">
+                         <div class="col">
+                             <div class="row align-items-center">
+                                 <div class="col">
+                                     <div class="mt-2">
+                                         <div class="input-group">
+                                             <span class="input-group-text">Заявка №${v.pk}</span>
+                                         </div>
+                                     </div>
+                                 </div>
+                                 <div class="col text-end mt-1">
+                                     <h6></h6>
+                                 </div>
+                             </div>
+                             <div class="row">
+                                 <div class="col">
+                                     <div class="text-sizeMe mt-4">
+                                         <strong> ФИО: </strong>  ${v.fields.name}.
+                                         <strong> Адрес: </strong> ${v.fields.city} ${v.fields.address}.
+                                         <strong> Телефон: </strong> ${v.fields.phone}.
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                 	</div>
+                 </div>
+                        `
+                    })
+
                     addressFoundWarning.style.display = found ? "block" : "none"
                 })
             })

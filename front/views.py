@@ -16,12 +16,15 @@ from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.core import serializers
 
 from .forms import (
     ContractCreateForm,
     ContractInfoForm,
     ContractHistorySearchForm,
     LoginForm,
+    ContractInfoFormInternet,
+    ContractInfoFormTelevision,
 )
 from .models import (
     STATUS_CHOICE,
@@ -117,7 +120,7 @@ def get_users():
     headers = {"Authorization": f"Token {token}", 'Accept': 'application/json'}
     response = requests.get(url, headers=headers)
     data = response.json()
-    return []
+    return data
 
 
 def get_active_users():
@@ -132,10 +135,13 @@ def get_active_users():
 
 
 def least_workload_user(users):
+    print('Пользователь:', users)
     contracts = Contract.objects.filter(state__in=[STATE_NOTPROCESSED, STATE_INPROGRESS]).values("user")
+    print('Список Контрактов', contracts)
     contract_users = list(map(lambda x: x["user"], contracts))
+    print('Активные Юзеры', contract_users)
     for user in users:
-        if user.id not in contracts:
+        if user.id not in contract_users:
             return user
 
 
@@ -148,6 +154,7 @@ def least_active_user():
     if not found_users.exists():
         return
 
+    print('Пользователи', found_users)
     user = least_workload_user(found_users)
     if user is None:
         return
@@ -174,22 +181,21 @@ def contract_new(request):
                     request,
                     messages.SUCCESS,
                     f"Пользователь {assign_user} получил заявку")
-
-                comment_row = CommentRow(
-                    user=request.user,
-                    text=f"Пользователь {assign_user} получил заявку")
-                comment_row.save()
-                contract.comments.add(comment_row)
             else:
                 Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
             contract.save()
 
+            create_text = f"Создана заявка с параметрами: {dict2html(form.cleaned_data, contract)}"
+            if assign_user is not None:
+                create_text += "<br>"
+                create_text += f"Пользователь {assign_user} получил заявку"
+
             comment_text = request.POST.get("comment")
             comment_row = CommentRow(
                 user=request.user,
                 text=comment_text,
-                changes=f"Создана заявка с параметрами: {dict2html(form.cleaned_data, contract)}")
+                changes=create_text)
             comment_row.save()
 
             contract.comments.add(comment_row)
@@ -458,6 +464,8 @@ def diff_with_form(form, contract):
 def contract_consider(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     info_form = ContractInfoForm(instance=contract)
+    info_form_in = ContractInfoFormInternet(instance=contract)
+    info_form_tv = ContractInfoFormTelevision(instance=contract)
 
     if request.method == "POST":
         comment = request.POST.get("comment")
@@ -468,6 +476,8 @@ def contract_consider(request, contract_id):
         request, "consider_contract.html", {
             "contract_id": contract_id,
             "info_form":   info_form,
+            "info_form_in": info_form_in,
+            "info_form_tv": info_form_tv,
             "contract":    contract,
             "users":       FrontUser.objects.all()
         })
@@ -521,6 +531,31 @@ def contract_update_internet(request, contract_id):
     return render(request, "consider_contract.html", {
         "contract_id": contract_id,
         "info_form_in": info_form_in,
+        "contract": contract,
+        "users": User.objects.all()
+    })
+
+@login_required(login_url='/login')
+def contract_update_television(request, contract_id):
+    contract = get_object_or_404(Contract, pk=contract_id)
+    info_form_tv = ContractInfoFormTelevision(instance=contract)
+
+    if request.method == "POST":
+        form = ContractInfoFormTelevision(data=request.POST, instance=contract)
+        if form.is_valid():
+            diff = diff_with_form(
+                form,
+                Contract.objects.get(pk=contract_id))
+            contract.save()
+            cmnt = CommentRow(user=request.user, changes=dictDiff2html(diff))
+            cmnt.save()
+
+            contract.comments.add(cmnt)
+        return redirect(contract_consider, contract_id)
+
+    return render(request, "consider_contract.html", {
+        "contract_id": contract_id,
+        "info_form_in": info_form_tv,
         "contract": contract,
         "users": User.objects.all()
     })
@@ -794,13 +829,17 @@ def contract_bulk_later_apply(request):
 
 def check_address(request):
     text = request.GET["text"]
-    found = False
+    #found = False
+    #data = ""
 
     contracts = Contract.objects \
-        .annotate (search=SearchVector('address')) \
+        .annotate(search=SearchVector('address')) \
         .filter(search=text)
 
-    if contracts.exists():
-        found = True
+    found = contracts.exists()
 
-    return JsonResponse({"found": found})
+        #data = list(map(lambda x: x.address, contracts))
+
+    data = serializers.serialize('python', contracts)
+
+    return JsonResponse({"found": found, "data": data})
