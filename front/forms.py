@@ -10,7 +10,7 @@ NumberFormControl = lambda: forms.NumberInput(attrs={"class": "form-control"})
 TextFormControl = lambda: forms.TextInput(attrs={"class": "form-control"})
 TextAreaFormControl = lambda: forms.Textarea(attrs={"class": "form-control"})
 SelectFromControl = lambda: forms.Select(attrs={"class": "form-select"})
-SelectFromControlTitle = lambda: forms.Select(attrs={"class": "form-select", "placeholder": "information" })
+CustomFormControl = lambda : forms.TextInput(attrs={"class": "form-control form-control-sm", "minlength": "5", "required": "true"})
 CheckBoxFormControl = lambda: forms.CheckboxInput(attrs={"type": "radio"})
 CheckboxSelectMultiple = lambda : forms.CheckboxInput(attrs={"class": "form-check-input"})
 
@@ -64,10 +64,10 @@ class ContractCreateForm(forms.ModelForm):
     class Meta:
         model = Contract
         widgets = {
-            "name": rows(TextFormControl(), 1),
-            "city": TextFormControl(),
-            "address": TextFormControl(),
-            "phone": TextFormControl(),
+            "name": CustomFormControl(),
+            "city": CustomFormControl(),
+            "address": CustomFormControl(),
+            "phone": CustomFormControl(),
             "from_office": CheckBoxFormControl(),
         }
         fields = widgets.keys()
@@ -78,14 +78,20 @@ class ContractInfoForm(forms.ModelForm):
         model = Contract
         widgets = {
             "name": (TextFormControl()),
-            "city": (TextFormControl()),
+            "city": (CustomFormControl()),
             "address": (TextFormControl()),
             "phone": (TextFormControl()),
-            # "conditions_two": (SelectFromControl()),
-            # "equipment_two": (SelectFromControl()),
-            # "exodus_tv": (SelectFromControl()),
         }
         fields = widgets.keys()
+
+# class ContractInfoForm(forms.ModelForm):
+#     name = form.CharField(widgets=TextFormControl())
+#     city = form.CharField(widgets=CustomFormControl())
+#     address = form.CharField(widgets=TextFormControl())
+#     phone = form.CharField(widgets=TextFormControl())
+#     class Meta:
+#         model = Contract
+#         fields = ['name', 'city', 'address', 'phone']
 
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
@@ -98,7 +104,7 @@ class ContractInfoFormInternet(forms.ModelForm):
     class Meta:
         model = Contract
         widgets = {
-            "conditions_first": (SelectFromControlTitle()),
+            "conditions_first": (SelectFromControl()),
             "equipment_first": (SelectFromControl()),
             "exodus_in": (SelectFromControl()),
         }
@@ -108,7 +114,7 @@ class ContractInfoFormTelevision(forms.ModelForm):
     class Meta:
         model = Contract
         widgets = {
-            "conditions_two": (SelectFromControlTitle()),
+            "conditions_two": (SelectFromControl()),
             "equipment_two": (SelectFromControl()),
             "exodus_tv": (SelectFromControl()),
         }

@@ -10,6 +10,7 @@ urlpatterns = [
     path('contract/take/random/', views.contract_take_random, name='contract_take_random'),
     path('contract/archive/', views.contract_archive, name="contract_archive"),
     path('contract/archive/search/', views.ContractArchiveSearch.as_view(), name="ContractArchiveSearch"),
+    path('contract/agreements/search', views.ContractSearch.as_view(), name="ContractSearch"),
     path('contract/list/', views.contract_list, name="contract_list"),
     path('contract/list/my/', views.contract_list_my, name="contract_list_my"),
     path('contract/list/my/created', views.contract_list_my, name="contract_list_my_created"),
@@ -39,11 +40,12 @@ urlpatterns = [
     path('check/address/', views.check_address, name='check_address'),
 
     path('login/', LoginView.as_view(), name='login'),
+    path('permission/', views.permission, name='permission'),
     path('logout/', LogoutView.as_view(next_page="/login"), name='logout')
 ]
 
-# if settings.DEBUG:
-#   import debug_toolbar
-#    urlpatterns = [
-#        path('__debug__/', include(debug_toolbar.urls)),
-#    ] + urlpatterns
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

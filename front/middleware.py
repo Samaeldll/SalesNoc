@@ -15,6 +15,7 @@ def timing_check(get_response):
 
             if datetime.datetime.now(datetime.timezone.utc) >= contract.plain_later:
                 contract.plain_later = None
+                contract.user = None
                 contract.state = STATE_NOTPROCESSED
                 contract.save()
 

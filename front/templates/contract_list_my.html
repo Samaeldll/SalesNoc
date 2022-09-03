@@ -7,9 +7,11 @@
             <li class="nav-item active" role="presentation">
                 <a class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" aria-controls="create">Созданные Заявки</a>
             </li>
+            {% if not perms.front.contract_browse %}{% else %}
             <li class="nav-item" role="presentation">
                 <a class="nav-link" id="appoint-tab" data-bs-toggle="tab" data-bs-target="#appoint" aria-controls="appoint">Выполняющие Заявки</a>
             </li>
+            {% endif %}
         </ul>
         </div>
         <div class="tab-content" id="tabsContent">

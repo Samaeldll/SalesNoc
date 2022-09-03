@@ -3,6 +3,8 @@ from django.contrib.auth.models import User, AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.contrib.postgres.search import SearchVectorField
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 STATE_NOTPROCESSED = 0
 STATE_LATER = 1
@@ -18,8 +20,8 @@ STATE_CHOICE = (
     (STATE_COMPLETE, "Оформленна"),
 )
 
-SERVICE_A = 1
-SERVICE_B = 2
+SERVICE_A = "SERVICE_A"
+SERVICE_B = "SERVICE_B"
 
 SERVICE_CHOICE = (
     (SERVICE_A, "Интернет"),
@@ -177,19 +179,20 @@ class Contract(models.Model):
     class Meta:
         permissions = [
             ("contract_assign", "Может назначить пользователя на выполнение заявки"),
-            ("contract_browse", "Может просматривать заявки"),
+            ("contract_browse", "Может просматривать список заявок"),
             ("contract_create", "Может создавать заявки"),
             ("contract_edit", "Может редактировать заявки"),
-            ("contract_comment", "Может добавлять комментарий к заявке"),
+            #("contract_comment", "Может добавлять комментарий к заявке"),
             ("contract_close", "Может закрывать заявку"),
             ("contract_time", "Может отложить заявку"),
-            ("contract_take", "Может брать заявку"),
+            ("contract_take", "Может брать заявку в обработку"),
+            ("contract_browse_statistics", "Может просматривать 'Статистику'"),
         ]
 
-    name = models.CharField("Фио", max_length=50)
+    name = models.CharField("Фио", max_length=100)
     city = models.CharField("Город", max_length=50)
     address = models.CharField("Адрес", max_length=100)
-    phone = models.CharField("Телефон", max_length=20)
+    phone = models.CharField("Телефон", max_length=50)
 
     created_by = models.ForeignKey(
         FrontUser, verbose_name="Создатель", on_delete=models.SET_NULL, null=True,
@@ -252,7 +255,7 @@ class Contract(models.Model):
         "Приоритетная Услуга",
         max_length=15,
         choices=SERVICE_CHOICE,
-        default='SERVICE_A',)
+        default=SERVICE_A,)
 
     create_date = models.DateTimeField(auto_now_add=True)
     # closed_time = models.DateTimeField(auto_now_add=True)
@@ -277,4 +280,10 @@ class Contract(models.Model):
         comment.save()
         self.comments.add(comment)
 
+    def validate_even(value):
+        if value < 10:
+            raise ValidationError(
+                _('Ошибка: номер должен иметь от 10 цифр.'),
+                params={'value': value},
+            )
 

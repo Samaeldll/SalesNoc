@@ -1,6 +1,7 @@
 import collections
 import datetime
 import json
+import typing
 import requests
 
 from django import views
@@ -10,13 +11,21 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank, SearchHeadline, SearchVectorField
 from django.views.generic import ListView
+from django.contrib.postgres.search import (
+    SearchQuery,
+    SearchVector,
+    SearchRank,
+    SearchHeadline)
+from django.core import serializers
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.core import serializers
+from django.views.generic import ListView
 
 from .forms import (
     ContractCreateForm,
@@ -42,8 +51,6 @@ from .models import (
     FrontUser, Statistic, STATISTIC_NO_AUTO_ASSIGN, User
 )
 
-
-
 class LoginView(views.View):
     def get(self, request, *args, **kwargs):
         form = LoginForm(request.POST or None)
@@ -61,6 +68,8 @@ class LoginView(views.View):
                 return HttpResponseRedirect('/contract/')
         return render(request, 'login.html', {'form': form})
 
+def permission(request):
+    return render(request, 'permission.html')
 
 def dict2html(data, model):
     res = []
@@ -72,7 +81,7 @@ def dict2html(data, model):
             data = ""
             for k1, valid_display in choices:
                 for k2 in value:
-                    if int(k1) == int(k2):
+                    if k1 == k2:
                         data += f"<span class='db_span_field_{k1}'>{valid_display}</span>"
                         data += " "
 
@@ -89,15 +98,12 @@ def dict2html(data, model):
 def dictDiff2html(data):
     res = []
     for key, diff in data.items():
-        # if diff['new'] is None or not diff['new']:
-        #      pass
-        # else:
-            res.append(
-                f"<div class='db_field db_field_{key}'>"
-                f"   <strong>{diff['localized_key']}:</strong> "
-                f"   {diff['old']} <strong>изменено на</strong> {diff['new']}"
-                f"</div>"
-            )
+        res.append(
+            f"<div class='db_field db_field_{key}'>"
+            f"   <strong>{diff['localized_key']}:</strong> "
+            f"   {diff['old']} <strong>изменено на</strong> {diff['new']}"
+            f"</div>"
+        )
     return "".join(res)
 
 def filter_away_users(online, offline):
@@ -135,11 +141,8 @@ def get_active_users():
 
 
 def least_workload_user(users):
-    print('Пользователь:', users)
     contracts = Contract.objects.filter(state__in=[STATE_NOTPROCESSED, STATE_INPROGRESS]).values("user")
-    print('Список Контрактов', contracts)
     contract_users = list(map(lambda x: x["user"], contracts))
-    print('Активные Юзеры', contract_users)
     for user in users:
         if user.id not in contract_users:
             return user
@@ -154,7 +157,6 @@ def least_active_user():
     if not found_users.exists():
         return
 
-    print('Пользователи', found_users)
     user = least_workload_user(found_users)
     if user is None:
         return
@@ -163,8 +165,10 @@ def least_active_user():
 
 
 @login_required(login_url='/login')
+@permission_required('front.contract_create', login_url='/permission')
 def contract_new(request):
     form = ContractCreateForm()
+
 
     if request.method == "POST":
         form = ContractCreateForm(request.POST)
@@ -177,6 +181,7 @@ def contract_new(request):
             if assign_user is not None:
                 contract.user = assign_user
                 contract.state = STATE_INPROGRESS
+                contract.status = STATUS_WORKS
                 messages.add_message(
                     request,
                     messages.SUCCESS,
@@ -205,11 +210,11 @@ def contract_new(request):
                 messages.SUCCESS,
                 f"Успешно создано под номером #{contract.id}")
             form = ContractCreateForm()  # reset form
+            return redirect("contract_new")
 
     return render(request, "register_contract.html", {"form": form})
 
-
-@login_required(login_url='/login')
+@permission_required('front.contract_take', login_url='/permission')
 def contract_take(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     contract.user = request.user
@@ -220,9 +225,8 @@ def contract_take(request, contract_id):
     contract.history_add(request.user, "Взята задача")
     return redirect(reverse("contract_consider", args=[contract.id]))
 
-
-@login_required(login_url='/login')
-def contract_take_random(request):
+def random_contract() -> typing.Optional[Contract]:
+    """Вернет рандомную заявку с учетом приоритета, если такой не будет, то вернет None"""
     priority = []
     for item in Contract.objects.filter(~Q(status=STATUS_COMPLETE), user__isnull=True):
         p = 0
@@ -235,10 +239,17 @@ def contract_take_random(request):
 
     priority = sorted(priority, key=lambda i: i[1], reverse=True)
     if len(priority) == 0:
+        return None
+
+    contract = priority[0][0]
+    return contract
+
+def contract_take_random(request):
+    contract = random_contract()
+    if contract is None:
         messages.add_message(request, messages.WARNING, "Нет подходящих заявок")
         return redirect(reverse("contract_list"))
 
-    contract = priority[0][0]
     contract.user = request.user
     contract.state = STATE_INPROGRESS
     contract.status = STATUS_WORKS
@@ -289,13 +300,13 @@ class SearchRankCD(SearchRank):
 
 class ContractArchiveSearch(ListView):
     template_name = 'history_contract.html'
-    queryset = Contract.objects.all()
 
     def get_context_data(self, **kwargs):
+        include = [STATE_COMPLETE]
         context = super(ContractArchiveSearch, self).get_context_data()
         text = self.request.GET.get("text")
 
-        vector = SearchVector('name', 'city', 'phone')
+        vector = SearchVector('name', 'city', 'phone', 'address')
         query = SearchQuery(' & '.join([term + ':*' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
         search_headline = SearchHeadline('name', query)
@@ -305,6 +316,7 @@ class ContractArchiveSearch(ListView):
             .annotate(rank = SearchRank(vector, query)) \
             .annotate(headline = search_headline) \
             .filter(rank__gte = 0.001) \
+            .filter(state__in=include) \
             .order_by("-rank")
 
         context['vector'] = vector
@@ -314,12 +326,50 @@ class ContractArchiveSearch(ListView):
 
     def get_queryset(self):
         text = self.request.GET.get("text")
+        query = SearchQuery(
+            ' & '.join([term + ':*' for term in text.split(' ') if len(term)]),
+            search_type='raw', config='russian')
+        return Contract.objects.all() \
+            .filter(tsv=query) \
+            .annotate(rank=SearchRankCD(models.F('tsv'), query))
+
+
+class ContractSearch(ListView):
+    template_name = 'list_contract.html'
+
+    def get_context_data(self, **kwargs):
+        include = [STATE_NOTPROCESSED, STATE_INPROGRESS, STATE_REPROCESSING]
+        context = super(ContractSearch, self).get_context_data()
+        text = self.request.GET.get("text")
+
+        vector = SearchVector('name', 'city', 'phone', 'address')
         query = SearchQuery(' & '.join([term + ':*' for term in text.split(' ') if len(term)]),
                             search_type = 'raw', config = 'russian')
-        return super().get_queryset().filter(tsv = query).annotate(rank = SearchRankCD(models.F('tsv'), query))
+        search_headline = SearchHeadline('name', query)
 
 
+        contracts = Contract.objects \
+            .annotate(rank = SearchRank(vector, query)) \
+            .annotate(headline = search_headline) \
+            .filter(rank__gte = 0.001) \
+            .filter(state__in=include) \
+            .order_by("-rank")
 
+        context['vector'] = vector
+        context['contracts'] = contracts
+        context['text'] = text
+        return context
+
+    def get_queryset(self):
+        text = self.request.GET.get("text")
+        query = SearchQuery(
+            ' & '.join([term + ':*' for term in text.split(' ') if len(term)]),
+            search_type='raw', config='russian')
+        return Contract.objects.all() \
+            .filter(tsv=query) \
+            .annotate(rank=SearchRankCD(models.F('tsv'), query))
+
+#@permission_required('front.contract_browse_statistics', login_url='/permission')
 def collect_contract_statistic():
     res = collections.defaultdict(int)
     for item in Contract.objects.all().values("user", "state"):
@@ -336,7 +386,7 @@ def collect_contract_statistic():
     }
 
 
-@login_required(login_url='/login')
+@permission_required('front.contract_browse', login_url='/permission')
 def contract_list(request):
     include = [STATE_NOTPROCESSED, STATE_REPROCESSING]
     contracts = Contract.objects.filter(state__in=include, user__isnull=True).order_by(
@@ -347,10 +397,9 @@ def contract_list(request):
         {"contracts": contracts, **collect_contract_statistic()})
 
 
-@login_required(login_url='/login')
 def contract_list_my(request):
-    include = [STATE_NOTPROCESSED, STATE_REPROCESSING, STATE_INPROGRESS]
-    contracts = Contract.objects.filter(state__in=include, user=request.user).order_by("-id")
+    #include = [STATE_NOTPROCESSED, STATE_REPROCESSING, STATE_INPROGRESS]
+    contracts = Contract.objects.filter(user=request.user).order_by("-id")
     contractcs = Contract.objects.filter(created_by=request.user, create_date__gte=timezone.now() - datetime.timedelta(hours=24)).order_by("-id")
 
     if request.method == "POST":
@@ -364,12 +413,13 @@ def contract_list_my(request):
     return render(
         request,
         "contract_list_my.html",
-        {"contracts": contracts, **collect_contract_statistic(),
-         "contractcs": contractcs,
-         })
+        {
+            "contracts":  contracts, **collect_contract_statistic(),
+            "contractcs": contractcs,
+        }
+    )
 
 
-@login_required(login_url='/login')
 def contract_list_by_status(request, status=None):
     contracts = Contract.objects.filter(state__in=[status]).order_by("-id")
     return render(
@@ -377,7 +427,7 @@ def contract_list_by_status(request, status=None):
         "list_contract.html",
         {"contracts": contracts, **collect_contract_statistic()})
 
-
+@login_required(login_url='/login')
 def contract_list_later(request):
     include = [STATE_LATER]
     contracts = Contract.objects.filter(state__in=include, user=request.user).order_by(
@@ -387,7 +437,7 @@ def contract_list_later(request):
         "list_contract.html",
         {"contracts": contracts, **collect_contract_statistic()})
 
-
+@login_required(login_url='/login')
 def contract_list_active(request):
     include = [STATE_INPROGRESS, STATE_REPROCESSING]
     contracts = Contract.objects.filter(state__in=include, user__isnull=False).order_by(
@@ -395,7 +445,7 @@ def contract_list_active(request):
     return render(
         request,
         "list_contract.html",
-        {"contracts": contracts, **collect_contract_statistic()})
+        {"contracts": contracts})
 
 
 @login_required(login_url='/login')
@@ -461,6 +511,7 @@ def diff_with_form(form, contract):
 
 
 @login_required(login_url='/login')
+@permission_required('front.contract_browse', login_url='/permission')
 def contract_consider(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     info_form = ContractInfoForm(instance=contract)
@@ -510,7 +561,6 @@ def contract_update(request, contract_id):
         "users": User.objects.all()
     })
 
-@login_required(login_url='/login')
 def contract_update_internet(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     info_form_in = ContractInfoFormInternet(instance=contract)
@@ -535,7 +585,6 @@ def contract_update_internet(request, contract_id):
         "users": User.objects.all()
     })
 
-@login_required(login_url='/login')
 def contract_update_television(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     info_form_tv = ContractInfoFormTelevision(instance=contract)
@@ -560,7 +609,6 @@ def contract_update_television(request, contract_id):
         "users": User.objects.all()
     })
 
-@login_required(login_url='/login')
 def contract_call(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     if contract.call_date is not None:
@@ -572,7 +620,6 @@ def contract_call(request, contract_id):
 
     messages.add_message(request, messages.SUCCESS, "Успешно")
     return redirect(reverse("contract_detail", args=[contract_id]))
-
 
 @login_required(login_url='/login')
 def contract_close(request, contract_id):
@@ -587,16 +634,40 @@ def contract_close(request, contract_id):
         contract.status = STATUS_NONE
         contract.user = None
         contract.history_add(request.user, "Вернул заявку в ожидание обработки")
-        messages.add_message(request, messages.SUCCESS, "Заявка была возвращена, проверьте указанный вами статус.")
-
-    assign_user= least_active_user()
-    if assign_user is not None:
-        contract.user = assign_user
-        contract.state = STATE_INPROGRESS
-    else:
-        Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            "Заявка была возвращена, проверьте указанный вами статус.")
 
     contract.save()
+
+    # выдаем рандомную заявку если такая есть иначе вернем None
+    if not Contract.objects.filter(user=request.user).exists():
+        new_contract = random_contract()
+        if new_contract is None:
+            messages.add_message(
+                request,
+                messages.WARNING,
+                "Нет подходящих заявок для авто назначения")
+            return redirect(reverse("contract_list"))
+        else:
+            new_contract.user = request.user
+            new_contract.state = STATE_INPROGRESS
+            new_contract.status = STATUS_WORKS
+            new_contract.save()
+            new_contract.history_add(request.user, "Взята задача рандомно")
+            messages.add_message(
+                request,
+                messages.WARNING,
+                "Вам выдана новая заявка")
+            return redirect(reverse("contract_list"))
+
+    # assign_user= least_active_user()
+    # if assign_user is not None:
+    #     contract.user = assign_user
+    #     contract.state = STATE_INPROGRESS
+    # else:
+    #     Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
     return redirect(reverse("contract_consider", args=[contract.id]))
 
@@ -629,6 +700,7 @@ def contract_close(request, contract_id):
 
 
 @login_required(login_url='/login')
+@permission_required('front.contract_close')
 def contract_plain_cancel(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     contract.plain_later = None
@@ -829,8 +901,6 @@ def contract_bulk_later_apply(request):
 
 def check_address(request):
     text = request.GET["text"]
-    #found = False
-    #data = ""
 
     contracts = Contract.objects \
         .annotate(search=SearchVector('address')) \
@@ -838,7 +908,6 @@ def check_address(request):
 
     found = contracts.exists()
 
-        #data = list(map(lambda x: x.address, contracts))
 
     data = serializers.serialize('python', contracts)
 
