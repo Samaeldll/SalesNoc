@@ -42,24 +42,15 @@
                     <a class="nav-link" href="{% url 'contract_statistic' %}">Статистика</a>
                 </li>
                 {% endif %}
-                <html>
-                <body>
-                <script async src="https://telegram.org/js/telegram-widget.js?19" data-telegram-login="SalesMessegeBot" data-size="medium" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
-                <script type="text/javascript">
-                function onTelegramAuth(user) {
-                alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
-                }
-                </script>
-                </body>
-</html>
+            </ul>
         </div>
     </div>
-    <div class="mr-2">
-        <form class="form-inline my-2 my-lg-0 display:flex" action="{% url 'logout' %}">
-            <span class="navbar-text mr-2">{{ request.user }}</span>
-            <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
-        </form>
+    <div class="mr-4">
+        <a class="nav-link" aria-current="page" href="{% url 'profile' %}">{{ request.user }}</a>
     </div>
+    <form class="form-inline my-2 my-lg-0 display:flex" action="{% url 'logout' %}">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
+    </form>
 </nav>
 {% if messages %}
     <div class="container">

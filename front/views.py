@@ -71,6 +71,9 @@ class LoginView(views.View):
 def permission(request):
     return render(request, 'permission.html')
 
+def profile(request):
+    return render(request, 'profile.html')
+
 def dict2html(data, model):
     res = []
     for key, value in data.items():

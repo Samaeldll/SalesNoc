@@ -6,6 +6,8 @@ from . import views
 from .views import LoginView
 
 urlpatterns = [
+    path('profile/', views.profile, name='profile'),
+
     path('contract/', views.contract_new, name='contract_new'),
     path('contract/take/random/', views.contract_take_random, name='contract_take_random'),
     path('contract/archive/', views.contract_archive, name="contract_archive"),
