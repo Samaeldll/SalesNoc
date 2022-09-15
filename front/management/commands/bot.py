@@ -1,36 +1,22 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from telebot import TeleBot
-
-from django_telegram_login.widgets.constants import (
-    SMALL,
-    MEDIUM,
-    LARGE,
-    DISABLE_USER_PHOTO,
-)
-from django_telegram_login.widgets.generator import (
-    create_callback_login_widget,
-    create_redirect_login_widget,
-)
-from django_telegram_login.authentication import verify_telegram_authentication
-from django_telegram_login.errors import (
-    NotTelegramDataError,
-    TelegramDataIsOutdatedError,
+from .models import (
+    Contract,
+    FrontUser,
+    User,
 )
 
-# Объявление переменной бота
 bot_name = settings.TELEGRAM_BOT_NAME
 bot = TeleBot(settings.TELEGRAM_BOT_API_KEY, threaded=False)
 
-# Название класса обязательно - "Command"
 class Command(BaseCommand):
-  	# Используется как описание команды обычно
-    help = 'Implemented to Django application telegram bot setup command'
+    help = 'Описание Команды'
 
     def handle(self, *args, **kwargs):
         bot.enable_save
-        _next_step_handlers(delay=2) # Сохранение обработчиков
-        bot.load_next_step_handlers()								# Загрузка обработчиков
+        _next_step_handlers(delay=2)
+        bot.load_next_step_handlers()
 
 def index(request):
 

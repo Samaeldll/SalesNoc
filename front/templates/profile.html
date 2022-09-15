@@ -1,9 +1,57 @@
 {% extends "body.html" %}
 {% block content %}
-    <script async src="https://telegram.org/js/telegram-widget.js?19" data-telegram-login="SalesMessegeBot" data-size="medium" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
-    <script type="text/javascript">
-    function onTelegramAuth(user) {
-    alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
-    }
-    </script>
-{% endblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/stylesheet.css' %}">
+    <div class="container justify-content-center" style="margin-top: 1%">
+        <h2 class="text-muted">Информация {{ request.user }}</h2>
+        <hr />
+    </div>
+    <div class="container justify-content-center ">
+        <div class="sidenav">
+            <ul class="nav-correct nav nav-tabs-correct" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link correct-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab" aria-controls="statistics" aria-selected="false">СТАТИСТИКА ПОЛЬЗОВАТЕЛЯ</button>
+                </li>
+                <hr>
+                <li class="nav-item">
+                    <button class="nav-link correct-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">НАСТРОЙКА ОПОВЕЩЕНИЯ</button>
+                </li>
+            </ul>
+            <div class="tab-content block-right" id="myTabContent">
+                <div class="correct-block">
+<!--                    <div class="tab-pane fade show active" id="statistics" role="tabpanel" aria-labelledby="profile-tab">Статистика</div>-->
+                    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings">
+                        <div class="row">
+                            <h2>Данные для отправки оповещения</h2>
+                            <hr>
+                            <div class="row">
+                            <div class="col correct-text">
+                                <strong>Авторизация: <script async src="https://telegram.org/js/telegram-widget.js?19" data-telegram-login="SalesMessegeBot" data-size="medium" data-userpic="false" data-radius="5" data-auth-url="telegram/Authentication" data-request-access="write"></script></strong> <br>
+                                <strong>Ваш Telegram Login: </strong> {{request.user.login_telegram}}
+                                <button class="btnMe" data-bs-toggle="modal" >Удалить Данные</button> <br>
+                                <strong>Ваш Telegram ID: </strong> {{request.user.id_telegram}}
+                                <button class="btnMe" data-bs-toggle="modal">Удалить Данные</button><br>
+                                <strong>Ваша Почта: </strong>
+                                <button class="btnMe" data-bs-toggle="modal">Удалить Данные</button><br>
+                            </div>
+                            <div class="col">
+<!--                                <button class="btnMe" data-bs-toggle="modal" >Удалить Данные</button>-->
+<!--                                <button class="btnMe" data-bs-toggle="modal" >Удалить Данные</button>-->
+<!--                                <button class="btnMe" data-bs-toggle="modal" >Удалить Данные</button>-->
+                            </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<style>
+    h2{
+        margin-top: 20px;
+        margin-bottom: 40px;
+    ]
+</style>
+
+
+        {% endblock %}

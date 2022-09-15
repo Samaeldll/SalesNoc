@@ -71,6 +71,7 @@ class LoginView(views.View):
 def permission(request):
     return render(request, 'permission.html')
 
+
 def profile(request):
     return render(request, 'profile.html')
 

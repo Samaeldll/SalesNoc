@@ -84,3 +84,79 @@ hb3 #block b{
   font-weight: normal;
   font-size: 110%;
 }
+
+.head {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+}
+
+.container-profile {
+  width: 100%;
+  position: fixed;
+  margin-left: 300px;
+  margin-top: 120px;
+}
+
+.block-right{
+ margin-left: 300px;
+ position: fixed;
+}
+
+.nav-correct{
+    /margin-top: 120px;
+    padding-left: 0;
+    list-style: none;
+    font-family: serif;
+    opacity: 0.8;
+    background-color: #dee2e6;
+    cursor: pointer;
+    float: left;
+    flex-direction: column;
+    line-height: 3em;
+    border-bottom: None;
+    height: 500px;
+}
+
+.correct-block{
+    width: 1000px;
+    height: 500px;
+    position: fixed;
+}
+
+.correct-text{
+   margin-top: none;
+   line-height: 3em;
+}
+
+.nav-profile-ram{
+    border: 5px solid black;
+}
+
+.nav-tabs-correct {
+  border-bottom: 1px solid #dee2e6;
+}
+.nav-tabs-correct .nav-link {
+  margin-bottom: -1px;
+  background: none;
+  color: #824040;
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+.nav-tabs-correct .nav-link:hover, .nav-tabs .nav-link:focus {
+  background-color: #615b5b;
+  isolation: auto;
+  opacity: 0.8;
+}
+
+.sidenav {
+    height: 100%; /* Full-height: remove this if you want "auto" height */
+    position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+    overflow-x: hidden; /* Disable horizontal scroll */
+}
+
+.correct-link {
+  width: 100%;
+}

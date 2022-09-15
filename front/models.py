@@ -133,7 +133,8 @@ CONNECT_TYPE_TV_CHOISE = (
 
 class FrontUser(AbstractUser):
     done_count = models.IntegerField(default=0)
-
+    id_telegram = models.IntegerField(default=0)
+    login_telegram = models.TextField(default='Неизвестно')
 
 class CommentRow(models.Model):
     class Meta:

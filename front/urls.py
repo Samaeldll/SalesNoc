@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 
 from . import views
+from . import authentication
 from .views import LoginView
 
 urlpatterns = [
@@ -43,7 +44,11 @@ urlpatterns = [
 
     path('login/', LoginView.as_view(), name='login'),
     path('permission/', views.permission, name='permission'),
-    path('logout/', LogoutView.as_view(next_page="/login"), name='logout')
+    path('logout/', LogoutView.as_view(next_page="/login"), name='logout'),
+
+    #telegram_bot
+
+    path('profile/telegram/Authentication', authentication.index, name='Authentication'),
 ]
 
 # if settings.DEBUG:
