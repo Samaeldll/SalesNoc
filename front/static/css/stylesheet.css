@@ -124,6 +124,12 @@ hb3 #block b{
     position: fixed;
 }
 
+.telegram-block{
+  white-space: nowrap;
+  display: inline-block;
+  transform: translate(5px, 10px);
+}
+
 .correct-text{
    margin-top: none;
    line-height: 3em;
