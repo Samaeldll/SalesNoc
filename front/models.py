@@ -135,6 +135,7 @@ class FrontUser(AbstractUser):
     done_count = models.IntegerField(default=0)
     id_telegram = models.IntegerField(default=0)
     login_telegram = models.TextField(default='Неизвестно')
+    workmail = models.TextField(blank = True)
 
 class CommentRow(models.Model):
     class Meta:

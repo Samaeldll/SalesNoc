@@ -2,7 +2,12 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 
-from .models import Contract, CONDITIONS_CHOICE, SERVICE_CHOICE
+from .models import (
+    Contract,
+    CONDITIONS_CHOICE,
+    SERVICE_CHOICE,
+    FrontUser
+)
 
 User = get_user_model()
 
@@ -119,6 +124,16 @@ class ContractInfoFormTelevision(forms.ModelForm):
             "exodus_tv": (SelectFromControl()),
         }
         fields = widgets.keys()
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = FrontUser
+        widgets = {
+            "id_telegram": (TextFormControl()),
+            "login_telegram": (TextFormControl()),
+        }
+        fields = widgets.keys()
+
 
 
 class ContractHistorySearchForm(forms.Form):
