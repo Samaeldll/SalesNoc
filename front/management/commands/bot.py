@@ -12,6 +12,7 @@ from front.models import (
 bot_name = settings.TELEGRAM_BOT_NAME
 bot = TeleBot(settings.TELEGRAM_BOT_API_KEY, threaded=False)
 
+
 @bot.message_handler(commands=['start', 'go'])
 def get_text_messages(message):
     bot.send_message(message.chat.id, 'Приветствую тебя, давай авторизуемся?')

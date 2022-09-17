@@ -194,9 +194,9 @@ def contract_new(request):
                 contract.user = assign_user
                 contract.state = STATE_INPROGRESS
                 contract.status = STATUS_WORKS
-                chatid = assign_user.id_telegram
-                if not chatid == 0:
-                    bot.send_message(chatid, 'Вам выдана заявка')
+                userid = assign_user.id_telegram
+                if not userid == 0:
+                    bot.send_message(userid, 'Вам выдана заявка')
                 messages.add_message(
                     request,
                     messages.SUCCESS,
