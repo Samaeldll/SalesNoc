@@ -203,7 +203,7 @@ class Contract(models.Model):
     user = models.ForeignKey(FrontUser, on_delete=models.SET_NULL, null=True)
     request_number = models.CharField(max_length=20, null=True, blank=True)
     contract_condition = models.TextField(null=True, blank=True)
-    tsv = SearchVectorField(null=True)
+    tsv = SearchVectorField(null=True, blank=True)
     state = models.SmallIntegerField(
         "Состояние",
         choices=STATE_CHOICE,
@@ -261,7 +261,7 @@ class Contract(models.Model):
 
     create_date = models.DateTimeField(auto_now_add=True)
     # closed_time = models.DateTimeField(auto_now_add=True)
-    call_date = models.DateTimeField(null=True)
+    call_date = models.DateTimeField(null=True, blank=True)
 
     comments = models.ManyToManyField(CommentRow)
 

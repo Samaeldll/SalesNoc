@@ -4,9 +4,12 @@ import json
 import typing
 import requests
 
+
 from django import views
 from django.utils import timezone
 from django.contrib import messages
+from django.conf import settings
+from telebot import TeleBot
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.postgres.search import SearchQuery, SearchVector, SearchRank, SearchHeadline, SearchVectorField
@@ -50,6 +53,11 @@ from .models import (
     STATUS_NONE, CommentRow,
     FrontUser, Statistic, STATISTIC_NO_AUTO_ASSIGN, User
 )
+
+bot_name = settings.TELEGRAM_BOT_NAME
+bot = TeleBot(settings.TELEGRAM_BOT_API_KEY, threaded=False)
+
+
 
 class LoginView(views.View):
     def get(self, request, *args, **kwargs):
@@ -186,6 +194,9 @@ def contract_new(request):
                 contract.user = assign_user
                 contract.state = STATE_INPROGRESS
                 contract.status = STATUS_WORKS
+                chatid = assign_user.id_telegram
+                if not chatid == 0:
+                    bot.send_message(chatid, 'Вам выдана заявка')
                 messages.add_message(
                     request,
                     messages.SUCCESS,
