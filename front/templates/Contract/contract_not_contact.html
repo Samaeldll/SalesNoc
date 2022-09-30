@@ -1,0 +1,89 @@
+{% extends "body.html" %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/stylesheet.css' %}">
+    <div class="container">
+        <div class="col mt-1">
+            <h3>Просмотр заявки №{{ contract_id }}</h3>
+        </div>
+        <div class="col">
+            <div class="row mb-1">
+                <div class="col mt-2">
+                    <strong>Фио: </strong>{{ contract.name }}
+                    <strong>Телефон: </strong>{{ contract.phone }}
+                    <strong>Город: </strong> {{ contract.city }},
+                    <strong>ул. </strong> {{ contract.address }}
+                    <hr>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <strong><em><mark>{{ contract.service_first }}</mark></em></strong> <br>
+                        <strong>Условия: </strong>{{ contract.get_conditions_first_display }}<br>
+                        <strong>Оборудование: </strong>{{ contract.get_equipment_first_display }}<br>
+                        <strong>Тип подключения: </strong>{{ contract.get_type_first_display }}<br>
+                        <strong>Исход: </strong>{{ contract.get_exodus_tv_display }}<br>
+                    </div>
+                    <div class="col">
+                        <strong><em><mark>{{ contract.service_two }}</mark></em></strong> <br>
+                        <strong>Условия: </strong>{{ contract.get_conditions_two_display }}<br>
+                        <strong>Оборудование: </strong>{{ contract.get_equipment_two_display }}<br>
+                        <strong>Тип подключения: </strong>{{ contract.get_type_two_display }}<br>
+                        <strong>Исход: </strong>{{ contract.get_exodus_in_display }}<br>
+                    </div>
+                </div>
+            </div>
+        <hr>
+        <div class="row">
+            <div class="col-sm">
+                <strong>Состояние Заявки:</strong> {{contract.get_state_display }}<br>
+                <strong>Статус:</strong> {{ contract.get_status_display }}<br>
+                <strong>Выполняющий: </strong>{% if contract.user %}
+                {{ contract.user.first_name }} {{ contract.user.last_name }} {% else %}Отсутствует  {% endif %}<br>
+            {% if contract.plain_later or contract.infinity_plain %}
+                <strong>Заявка отложена: </strong>{% if contract.plain_later %} {{ contract.plain_later }}
+                 {% else %}срок не определен{% endif %}
+            {% endif %}
+            </div>
+            <div class="col">
+                <strong>Офисное обращение:</strong> {% if contract.from_office %}Да{% else %}Нет{% endif %}<br>
+                <strong>Приоритетная услуга:</strong> {{ contract.get_priority_service_display }}
+            </div>
+        </div>
+            <hr>
+            <div class="col">
+                <strong>Вы выбрали пункт "Вернуть Заявку"</strong> Заявка будет перемещана в "Ожидание Обработки"
+            </div>
+            <div class="col">
+                <strong>Добавьте комментарий или нажмите кнопку "Сохранить"</strong>
+            </div>
+            <hr>
+        {% if not contract.state == 3 %}
+        <div class="row mt-4">
+            <ul class="nav nav-tabs" id="tabs" role="tablist">
+                <li class="nav-item" role="presentation"><a class="nav-link active" id="comment-tab" data-bs-toggle="tab" data-bs-target="#comment" aria-controls="comment"> Комментарии</a></li>
+            </ul>
+            <div class="tab-content" id="tabsContent">
+                <div class="tab-pane fade show active" id="comment" role="tabpanel" aria-labelledby="home-tab">
+                    <form action="" method="POST">
+                        {% csrf_token %}
+                        <div class="row mt-2">
+                            <div class="form-group">
+                                <textarea name="comment" rows="4" class="form-control form-control-sm" id="id_comment"></textarea>
+                            </div>
+                            <div class="text-right mt-2">
+                                <button type="submit" class="btn btn-outline-success">Подтвердить Изменения</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="col mt-4">
+                        {% block comment %}
+                        {% include "Contract/comment.html" %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

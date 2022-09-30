@@ -34,6 +34,12 @@ STATUS_NO_ANSWER = 2
 STATUS_THINK = 3
 STATUS_INCORRECT = 4
 STATUS_COMPLETE = 5
+status_waitprocess = 6
+status_waitclient = 7
+status_waitcompany = 8
+status_contractincorrect = 9
+status_notconnect = 10
+status_complete = 11
 
 STATUS_CHOICE = (
     (STATUS_NONE, "Отсутствует"),
@@ -41,7 +47,13 @@ STATUS_CHOICE = (
     (STATUS_NO_ANSWER, "Нет ответа"),
     (STATUS_THINK, "Подумает"),
     (STATUS_INCORRECT, "Неверная"),
-    (STATUS_COMPLETE, "Выполнено")
+    (STATUS_COMPLETE, "Выполнено"),
+    (status_waitprocess, "Ожидание Обработки"),
+    (status_waitclient, "Ожидание Клиента"),
+    (status_waitcompany, "Отложено Компанией"),
+    (status_contractincorrect, "Ошибочно Оформленна"),
+    (status_notconnect, "Адрес вне зоны покрытия"),
+    (status_complete, "Заявка Оформленна")
 )
 
 EXODUS_FAIL = 0
@@ -281,11 +293,3 @@ class Contract(models.Model):
             comment.text = text
         comment.save()
         self.comments.add(comment)
-
-    def validate_even(value):
-        if value < 10:
-            raise ValidationError(
-                _('Ошибка: номер должен иметь от 10 цифр.'),
-                params={'value': value},
-            )
-

@@ -3,6 +3,7 @@ import datetime
 import json
 import typing
 import requests
+import logging
 
 
 from django import views
@@ -54,16 +55,19 @@ from .models import (
     FrontUser, Statistic, STATISTIC_NO_AUTO_ASSIGN, User
 )
 
+logger_info = logging.getLogger('sms_cry_information')
+logger_error = logging.getLogger('sms_cry_errors')
+logger_response = logging.getLogger('sms_cry_response')
+
 bot_name = settings.TELEGRAM_BOT_NAME
-bot = TeleBot(settings.TELEGRAM_BOT_API_KEY, threaded=False)
-
-
+bot = TeleBot(settings.TELEGRAM_BOT_API_KEY)
 
 class LoginView(views.View):
+    a = 23124
     def get(self, request, *args, **kwargs):
         form = LoginForm(request.POST or None)
         context = {'form': form}
-        return render(request, 'login.html', context)
+        return render(request, 'User/login.html', context)
 
     def post(self, request, *args, **kwargs):
         form = LoginForm(request.POST or None)
@@ -74,14 +78,14 @@ class LoginView(views.View):
             if user:
                 login(request, user)
                 return HttpResponseRedirect('/contract/')
-        return render(request, 'login.html', {'form': form})
+        return render(request, 'User/login.html', {'form': form})
 
 def permission(request):
-    return render(request, 'permission.html')
+    return render(request, 'User/permission.html')
 
 
 def profile(request):
-    return render(request, 'profile.html')
+    return render(request, 'User/profile.html')
 
 def dict2html(data, model):
     res = []
@@ -121,8 +125,8 @@ def dictDiff2html(data):
 def filter_away_users(online, offline):
     res = []
 
-    for on_item in online:
-        is_away = False
+    for on_item in online: 
+        is_away = False 
         for off_item in offline:
             if on_item["username"] == off_item["username"]:
                 is_away = True
@@ -202,6 +206,10 @@ def contract_new(request):
                     messages.SUCCESS,
                     f"Пользователь {assign_user} получил заявку")
             else:
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    f"Все пользователя заняты, заявка отправлена в ожидание")
                 Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
             contract.save()
@@ -227,7 +235,7 @@ def contract_new(request):
             form = ContractCreateForm()  # reset form
             return redirect("contract_new")
 
-    return render(request, "register_contract.html", {"form": form})
+    return render(request, "Contract/register_contract.html", {"form": form})
 
 @permission_required('front.contract_take', login_url='/permission')
 def contract_take(request, contract_id):
@@ -300,7 +308,7 @@ def contract_archive(request):
     filter_args.update({"state": STATE_COMPLETE})
     contracts = Contract.objects.filter(**filter_args).order_by("-id")
     return render(
-        request, "history_contract.html", {
+        request, "Contract/history_contract.html", {
             "contracts":   contracts,
             "search_form": search_form
         })
@@ -314,7 +322,7 @@ class SearchRankCD(SearchRank):
             vector, query, normalization, **extra)
 
 class ContractArchiveSearch(ListView):
-    template_name = 'history_contract.html'
+    template_name = 'Contract/history_contract.html'
 
     def get_context_data(self, **kwargs):
         include = [STATE_COMPLETE]
@@ -408,7 +416,7 @@ def contract_list(request):
         "-id")
     return render(
         request,
-        "list_contract.html",
+        "Contract/list_contract.html",
         {"contracts": contracts, **collect_contract_statistic()})
 
 
@@ -427,7 +435,7 @@ def contract_list_my(request):
 
     return render(
         request,
-        "contract_list_my.html",
+        "Contract/contract_list_my.html",
         {
             "contracts":  contracts, **collect_contract_statistic(),
             "contractcs": contractcs,
@@ -439,7 +447,7 @@ def contract_list_by_status(request, status=None):
     contracts = Contract.objects.filter(state__in=[status]).order_by("-id")
     return render(
         request,
-        "list_contract.html",
+        "Contract/list_contract.html",
         {"contracts": contracts, **collect_contract_statistic()})
 
 @login_required(login_url='/login')
@@ -449,7 +457,7 @@ def contract_list_later(request):
         "-id")
     return render(
         request,
-        "list_contract.html",
+        "Contract/list_contract.html",
         {"contracts": contracts, **collect_contract_statistic()})
 
 @login_required(login_url='/login')
@@ -459,17 +467,17 @@ def contract_list_active(request):
         "-id")
     return render(
         request,
-        "list_contract.html",
+        "Contract/list_contract.html",
         {"contracts": contracts})
 
 
-@login_required(login_url='/login')
-def contract_list_delayed(request):
-    contracts = Contract.objects.filter(plain_later__isnull=False).order_by("-id")
-    return render(
-        request,
-        "list_contract.html",
-        {"contracts": contracts, **collect_contract_statistic()})
+# @login_required(login_url='/login')
+# def contract_list_delayed(request):
+#     contracts = Contract.objects.filter(plain_later__isnull=False).order_by("-id")
+#     return render(
+#         request,
+#         "Contract/list_contract.html",
+#         {"contracts": contracts, **collect_contract_statistic()})
 
 
 def localized_key(model, key):
@@ -532,6 +540,20 @@ def contract_consider(request, contract_id):
     info_form = ContractInfoForm(instance=contract)
     info_form_in = ContractInfoFormInternet(instance=contract)
     info_form_tv = ContractInfoFormTelevision(instance=contract)
+    
+    myusername = str(request.user)
+    myphone = contract.phone
+    address = contract.address
+    name = 'name'
+    contracts = Contract.objects.all()
+    for contract in contracts:
+        data = [
+            contract.name, contract.phone, contract.city, contract.status
+        ]
+        data = map(str, data)
+        # logger_info.info(' | '.join(data))
+        logger_error.error('jkxahdaisdhfhasdfhjasdf')
+        # logger_response.debug('debug messege')
 
     if request.method == "POST":
         comment = request.POST.get("comment")
@@ -539,7 +561,7 @@ def contract_consider(request, contract_id):
         return redirect(contract_consider, contract_id)
 
     return render(
-        request, "consider_contract.html", {
+        request, "Contract/consider_contract.html", {
             "contract_id": contract_id,
             "info_form":   info_form,
             "info_form_in": info_form_in,
@@ -553,7 +575,6 @@ def contract_consider(request, contract_id):
 def contract_update(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     info_form = ContractInfoForm(instance=contract)
-    info_form_in = ContractInfoFormInternet(instance=contract)
 
     if request.method == "POST":
         form = ContractInfoForm(data=request.POST, instance=contract)
@@ -568,10 +589,9 @@ def contract_update(request, contract_id):
             contract.comments.add(cmnt)
         return redirect(contract_consider, contract_id)
 
-    return render(request, "consider_contract.html", {
+    return render(request, "Contract/consider_contract.html", {
         "contract_id": contract_id,
         "info_form": info_form,
-        "info_form_in": info_form_in,
         "contract": contract,
         "users": User.objects.all()
     })
@@ -593,7 +613,7 @@ def contract_update_internet(request, contract_id):
             contract.comments.add(cmnt)
         return redirect(contract_consider, contract_id)
 
-    return render(request, "consider_contract.html", {
+    return render(request, "Contract/consider_contract.html", {
         "contract_id": contract_id,
         "info_form_in": info_form_in,
         "contract": contract,
@@ -617,7 +637,7 @@ def contract_update_television(request, contract_id):
             contract.comments.add(cmnt)
         return redirect(contract_consider, contract_id)
 
-    return render(request, "consider_contract.html", {
+    return render(request, "Contract/consider_contract.html", {
         "contract_id": contract_id,
         "info_form_in": info_form_tv,
         "contract": contract,
@@ -628,17 +648,18 @@ def contract_call(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
     if contract.call_date is not None:
         messages.add_message(request, messages.ERROR, "По этой заявке уже был звонок")
-        return redirect(reverse("contract_list"))
+        return redirect(reverse("Contract/contract_list"))
 
     contract.call_date = datetime.datetime.now()
     contract.save()
 
     messages.add_message(request, messages.SUCCESS, "Успешно")
-    return redirect(reverse("contract_detail", args=[contract_id]))
+    return redirect(reverse("Contract/contract_detail", args=[contract_id]))
 
 @login_required(login_url='/login')
-def contract_close(request, contract_id):
+def contract_return(request, contract_id):
     contract = get_object_or_404(Contract, pk=contract_id)
+
     if contract.status == STATUS_COMPLETE or contract.status == STATUS_INCORRECT:
         contract.state = STATE_COMPLETE
         contract.user = None
@@ -664,7 +685,7 @@ def contract_close(request, contract_id):
                 request,
                 messages.WARNING,
                 "Нет подходящих заявок для авто назначения")
-            return redirect(reverse("contract_list"))
+            return redirect(reverse("Contract/contract_list"))
         else:
             new_contract.user = request.user
             new_contract.state = STATE_INPROGRESS
@@ -675,7 +696,7 @@ def contract_close(request, contract_id):
                 request,
                 messages.WARNING,
                 "Вам выдана новая заявка")
-            return redirect(reverse("contract_list"))
+            return redirect(reverse("Contract/contract_return"))
 
     # assign_user= least_active_user()
     # if assign_user is not None:
@@ -684,34 +705,52 @@ def contract_close(request, contract_id):
     # else:
     #     Statistic.log(STATISTIC_NO_AUTO_ASSIGN)
 
-    return redirect(reverse("contract_consider", args=[contract.id]))
+    return redirect(reverse("Contract/contract_return", args=[contract.id]))
+
+def contract_not_contact(request, contract_id):
+    contract = get_object_or_404(Contract, pk=contract_id)
+
+    if request.method == "POST":
+        comment = request.POST.get("comment")
+        contract.comment_add(request.user, comment)
+        messages.add_message(
+            request,
+            messages.WARNING,
+            "Вы вернули заявку в 'Ожидание Обработки'")
+        return redirect(contract_list)
+
+    return render(request, "Contract/contract_not_contact.html", {
+        "contract_id": contract_id,
+        "contract": contract,
+        "users": FrontUser.objects.all()
+    })
 
 
-# @login_required(login_url='/login')
-# def contract_plain_later(request, contract_id):
-#     contract = get_object_or_404(Contract, pk=contract_id)
-#     new_date = request.POST.get("planning_later")
-#     is_infinity = bool(request.POST.get("infinity_delay"))
-#     if not new_date and not is_infinity:
-#         messages.add_message(request, messages.ERROR, "Вы не указали новую дату")
-#         return redirect("/contract")
-#
-#     if contract.plain_later:
-#         messages.add_message(request, messages.ERROR, "Дата у этой заявки уже указана")
-#         return redirect("/contract")
-#
-#     changes = "Отложена заявка на неопеределенный срок"
-#     if not is_infinity:
-#         contract.plain_later = datetime.datetime.strptime(new_date, "%Y-%m-%dT%H:%M")
-#         changes = f"Отложена заявка до {contract.plain_later}"
-#     else:
-#         contract.infinity_plain = True
-#
-#     contract.save()
-#     contract.history_add(user=request.user, changes=changes)
-#
-#     messages.add_message(request, messages.SUCCESS, "Успешно запланировано")
-#     return redirect(reverse("contract_list_my"))
+@login_required(login_url='/login')
+def contract_plain_later(request, contract_id):
+    contract = get_object_or_404(Contract, pk=contract_id)
+    new_date = request.POST.get("planning_later")
+    is_infinity = bool(request.POST.get("infinity_delay"))
+    if not new_date and not is_infinity:
+        messages.add_message(request, messages.ERROR, "Вы не указали новую дату")
+        return redirect("/contract")
+
+    if contract.plain_later:
+        messages.add_message(request, messages.ERROR, "Дата у этой заявки уже указана")
+        return redirect("/contract")
+
+    changes = "Отложена заявка на неопеределенный срок"
+    if not is_infinity:
+        contract.plain_later = datetime.datetime.strptime(new_date, "%Y-%m-%dT%H:%M")
+        changes = f"Отложена заявка до {contract.plain_later}"
+    else:
+        contract.infinity_plain = True
+
+    contract.save()
+    contract.history_add(user=request.user, changes=changes)
+
+    messages.add_message(request, messages.SUCCESS, "Успешно запланировано")
+    return redirect(reverse("Contract/contract_list_my"))
 
 
 @login_required(login_url='/login')
@@ -725,7 +764,7 @@ def contract_plain_cancel(request, contract_id):
     contract.history_add(request.user, "Задача возвращена")
 
     messages.add_message(request, messages.SUCCESS, "Успешно отменено")
-    return redirect(reverse("contract_consider", args=[contract.id]))
+    return redirect(reverse("Contract/contract_consider", args=[contract.id]))
 
 
 @login_required(login_url='/login')
@@ -740,7 +779,7 @@ def contract_assign(request, contract_id):
         messages.add_message(
             request, messages.WARNING,
             "Выбран пользователь, который уже является назначенным на этот контракт")
-        return redirect(reverse("contract_consider", args=[contract.id]))
+        return redirect(reverse("Contract/contract_consider", args=[contract.id]))
 
     contract.state = STATE_INPROGRESS
     contract.status = STATUS_WORKS
@@ -751,7 +790,7 @@ def contract_assign(request, contract_id):
         f"Заявка выдана в работу: {user.first_name} {user.last_name}")
 
     messages.add_message(request, messages.SUCCESS, "Пользователь назначен")
-    return redirect(reverse("contract_consider", args=[contract.id]))
+    return redirect(reverse("Contract/contract_consider", args=[contract.id]))
 
 
 @login_required(login_url='/login')
@@ -767,7 +806,7 @@ def contract_detail(request, contract_id):
             messages.add_message(request, messages.SUCCESS, "Успешно создано")
 
     return render(
-        request, "detail_contract.html", {
+        request, "Contract/detail_contract.html", {
             "info_form": info_form,
             "contract":  contract,
             "status":    STATUS_CHOICE,
@@ -803,7 +842,7 @@ def contract_statistic(request):
 
     no_assign_sum = Statistic.objects.filter(name=STATISTIC_NO_AUTO_ASSIGN).count()
     return render(
-        request, "statistic.html", {
+        request, "Contract/statistic.html", {
             "avg_call":         avg_call,
             "avg_call_by_user": avg_call_by_user,
             "no_assign_sum":    no_assign_sum
@@ -838,7 +877,7 @@ def contract_bulk_status_apply(request):
 
     if not new_status:
         messages.add_message(request, messages.ERROR, "Вы не выбрали статус")
-        return redirect(reverse("contract_list"))
+        return redirect(reverse("Contract/contract_list"))
 
     ids = json.loads(contract_ids)
     contracts = Contract.objects.filter(id__in=ids)
@@ -850,7 +889,7 @@ def contract_bulk_status_apply(request):
             f"Установлен новый статус {contract.get_status_display()}")
 
     messages.add_message(request, messages.SUCCESS, "Вы успешно изменили статус")
-    return redirect(reverse("contract_list"))
+    return redirect(reverse("Contract/contract_list"))
 
 
 @login_required(login_url='/login')
@@ -858,7 +897,7 @@ def contract_bulk_later_preview(request):
     contract_ids = request.POST.getlist("contracts[]")
     if not contract_ids:
         messages.add_message(request, messages.ERROR, "Вы не выбрали ни одной заявки")
-        return redirect(reverse("contract_list"))
+        return redirect(reverse("Contract/contract_list"))
 
     contract_ids = list(map(int, contract_ids))
     contracts = Contract.objects.filter(id__in=contract_ids)
@@ -880,7 +919,7 @@ def contract_bulk_later_apply(request):
 
     if not new_date and not is_infinity:
         messages.add_message(request, messages.ERROR, "Вы не выбрали новую дату")
-        return redirect(reverse("contract_list"))
+        return redirect(reverse("Contract/contract_list"))
 
     ids = json.loads(contract_ids)
     contracts = Contract.objects.filter(id__in=ids)
@@ -904,14 +943,14 @@ def contract_bulk_later_apply(request):
                     request,
                     messages.ERROR,
                     "Введенная дата меньше текущей")
-                return redirect(reverse("contract_consider", args=[contract.id]))
+                return redirect(reverse("Contract/contract_consider", args=[contract.id]))
             contract.save()
 
         messages.add_message(
             request,
             messages.SUCCESS,
             "Вы успешно установили новую дату")
-        return redirect(reverse("contract_consider", args=[contract.id]))
+        return redirect(reverse("Contract/contract_consider", args=[contract.id]))
 
 
 def check_address(request):

@@ -30,11 +30,11 @@ def index(request):
 
     #save to DB.
     if not FrontUser.objects.filter(id_telegram=result['id']).exists():
-        request.user.id_telegram = result['id']
-        request.user.login_telegram = result['username']
-        request.user.save()
-        messages.add_message(request, messages.SUCCESS, result['username'] + " вы успешно авторизированы! ")
-        return redirect("profile")
+            request.user.id_telegram = result['id']
+            request.user.login_telegram = result['username']
+            request.user.save()
+            messages.add_message(request, messages.SUCCESS, result['username'] + " вы успешно авторизированы! ")
+            return redirect("profile")
 
     messages.add_message(
         request,
